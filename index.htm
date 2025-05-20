@@ -1,0 +1,416 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Jogo do Labirinto</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: black; }
+        #gameCanvas { background-color: black; }
+        #controls { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; }
+        #controls button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+        #startScreen { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(0, 0, 0, 0.8); color: white; padding: 20px; border-radius: 5px; text-align: center; }
+        #startButton { padding: 15px 30px; font-size: 20px; cursor: pointer; }
+        #controls { display: none; }
+    </style>
+</head>
+<body>
+    <div id="startScreen">
+        <h1>Jogo do Labirinto</h1>
+        <button id="startButton">Iniciar Jogo</button>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+    <div id="controls">
+        <button onclick="movePlayer('up')">Cima</button>
+        <button onclick="movePlayer('down')">Baixo</button>
+        <button onclick="movePlayer('left')">Esquerda</button>
+        <button onclick="movePlayer('right')">Direita</button>
+        <button onclick="attack()">Atacar</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const startScreen = document.getElementById('startScreen');
+        const startButton = document.getElementById('startButton');
+        const controls = document.getElementById('controls');
+
+        let gameStarted = false;
+        let maze;
+        let player;
+        let enemies = [];
+        let cellSize;
+        let visionRadius;
+        let gameSpeed = 75;
+        let playerMoving = false;
+        let playerMoveQueue = [];
+        let animationFrameId; // Armazena o ID do requestAnimationFrame
+
+        startButton.addEventListener('click', () => {
+            startScreen.style.display = 'none';
+            controls.style.display = 'none';
+            startGame();
+        });
+
+        function startGame() {
+            gameStarted = true;
+            resizeCanvas();
+            cellSize = Math.floor(Math.min(canvas.width, canvas.height) / 20);
+            visionRadius = cellSize * 5;
+
+            maze = generateMaze(Math.floor(canvas.width / cellSize), Math.floor(canvas.height / cellSize));
+            player = createPlayer();
+            enemies = generateEnemies();
+
+            player.speed = 5;
+            enemies.forEach(enemy => {
+                enemy.speed = 3;
+                enemy.moveTimer = 0; // Adiciona um timer para controlar o movimento de cada inimigo
+            });
+
+            gameLoop();
+        }
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        function generateMaze(width, height) {
+            const grid = Array(height).fill(null).map(() => Array(width).fill(1));
+            const startX = 1;
+            const startY = 1;
+            let path = [[startY, startX]];
+            grid[startY][startX] = 0;
+
+            while (path.length > 0) {
+                const [y, x] = path.pop();
+                const directions = shuffle([[0, 2], [0, -2], [2, 0], [-2, 0]]);
+
+                for (const [dy, dx] of directions) {
+                    const newY = y + dy;
+                    const newX = x + dx;
+
+                    if (newY > 0 && newY < height - 1 && newX > 0 && newX < width - 1 && grid[newY][newX] === 1) {
+                        grid[newY][newX] = 0;
+                        grid[y + dy / 2][x + dx / 2] = 0;
+                        path.push([newY, newX]);
+                    }
+                }
+            }
+
+            grid[height - 2][width - 2] = 2;
+            return grid;
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function createPlayer() {
+            for (let y = 0; y < maze.length; y++) {
+                if (maze[y][0] === 0) {
+                    return { x: 0 * cellSize, y: y * cellSize, size: cellSize * 0.8, speed: 5, isAttacking: false, attackRange: cellSize };
+                }
+            }
+            return { x: 1 * cellSize, y: 1 * cellSize, size: cellSize * 0.8, speed: 5, isAttacking: false, attackRange: cellSize };
+        }
+
+        function generateEnemies() {
+            const numEnemies = Math.floor(Math.random() * 16) + 5;
+            const enemiesArray = [];
+            let placedEnemies = 0;
+
+            while (placedEnemies < numEnemies) {
+                const randomY = Math.floor(Math.random() * maze.length);
+                const randomX = Math.floor(Math.random() * maze[0].length);
+
+                if (maze[randomY][randomX] === 0 && (Math.abs(randomX - player.x / cellSize) > 5 || Math.abs(randomY - player.y / cellSize) > 5)) {
+                    enemiesArray.push({ x: randomX * cellSize, y: randomY * cellSize, size: cellSize * 0.6, speed: 3, moving: false, targetX: null, targetY: null, moveTimer: 0 }); // Inicializa moveTimer
+                    placedEnemies++;
+                }
+            }
+            return enemiesArray;
+        }
+
+        function movePlayer(direction) {
+            if (playerMoving) {
+                playerMoveQueue.push(direction);
+                return;
+            }
+
+            let targetX = player.x;
+            let targetY = player.y;
+            const currentPlayerGridX = Math.floor(player.x / cellSize);
+            const currentPlayerGridY = Math.floor(player.y / cellSize);
+            let nextGridX = currentPlayerGridX;
+            let nextGridY = currentPlayerGridY;
+
+            switch (direction) {
+                case 'up': nextGridY--; targetY -= cellSize; break;
+                case 'down': nextGridY++; targetY += cellSize; break;
+                case 'left': nextGridX--; targetX -= cellSize; break;
+                case 'right': nextGridX++; targetX += cellSize; break;
+            }
+
+            if (nextGridY >= 0 && nextGridY < maze.length && nextGridX >= 0 && nextGridX < maze[0].length && maze[nextGridY][nextGridX] !== 1) {
+                playerMoving = true;
+                animateMove(player, targetX, targetY, () => {
+                    playerMoving = false;
+                    if (playerMoveQueue.length > 0) {
+                        movePlayer(playerMoveQueue.shift());
+                    }
+                });
+            }
+        }
+
+        function animateMove(entity, targetX, targetY, callback) {
+            const dx = targetX - entity.x;
+            const dy = targetY - entity.y;
+            const steps = 10;
+            const stepX = dx / steps;
+            const stepY = dy / steps;
+            let currentStep = 0;
+
+            function animationFrame() {
+                if (!gameStarted) return; // Verifica se o jogo ainda está em andamento
+                entity.x += stepX;
+                entity.y += stepY;
+                currentStep++;
+                if (currentStep < steps) {
+                    animationFrameId = requestAnimationFrame(animationFrame); // Continua a animação
+                } else {
+                    entity.x = targetX;
+                    entity.y = targetY;
+                    if (callback) callback();
+                }
+            }
+            animationFrameId = requestAnimationFrame(animationFrame); // Inicia a animação
+        }
+
+        function attack() {
+            if (!player || player.isAttacking) return;
+            player.isAttacking = true;
+            setTimeout(() => {
+                player.isAttacking = false;
+            }, 300);
+
+            const playerGridX = Math.floor(player.x / cellSize);
+            const playerGridY = Math.floor(player.y / cellSize);
+
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemyGridX = Math.floor(enemies[i].x / cellSize);
+                const enemyGridY = Math.floor(enemies[i].y / cellSize);
+
+                const distance = Math.abs(playerGridX - enemyGridX) + Math.abs(playerGridY - enemyGridY);
+
+                if (distance <= 1) {
+                    enemies.splice(i, 1);
+                }
+            }
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (!gameStarted) return;
+            switch (event.key) {
+                case 'w': movePlayer('up'); break;
+                case 's': movePlayer('down'); break;
+                case 'a': movePlayer('left'); break;
+                case 'd': movePlayer('right'); break;
+            }
+        });
+
+        canvas.addEventListener('mousedown', () => {
+            if (gameStarted) {
+                attack();
+            }
+        });
+
+        function updateEnemies() {
+            for (let i = 0; i < enemies.length; i++) {
+                const enemy = enemies[i];
+                const enemySpeedFactor = enemy.speed / cellSize;
+
+                if (enemy.moving) {
+                    if (Math.abs(enemy.x - enemy.targetX) < 1 && Math.abs(enemy.y - enemy.targetY) < 1) {
+                        enemy.moving = false;
+                        enemy.targetX = null;
+                        enemy.targetY = null;
+                    } else {
+                        const dx = enemy.targetX - enemy.x;
+                        const dy = enemy.targetY - enemy.y;
+                        const angle = Math.atan2(dy, dx);
+                        enemy.x += Math.cos(angle) * enemySpeedFactor;
+                        enemy.y += Math.sin(angle) * enemySpeedFactor;
+                    }
+                    continue;
+                }
+
+                enemy.moveTimer += 1;
+                if (enemy.moveTimer < 30) continue; // Controla a frequência de movimento dos inimigos (ajuste o valor 30)
+                enemy.moveTimer = 0; // Reseta o timer
+
+                const enemyGridX = Math.floor(enemy.x / cellSize);
+                const enemyGridY = Math.floor(enemy.y / cellSize);
+
+                let targetGridX = enemyGridX;
+                let targetGridY = enemyGridY;
+
+                if (canSeePlayer(enemy)) {
+                    const playerGridX = Math.floor(player.x / cellSize);
+                    const playerGridY = Math.floor(player.y / cellSize);
+
+                    const deltaX = playerGridX - enemyGridX;
+                    const deltaY = playerGridY - enemyGridY;
+
+                    let moveX = 0;
+                    let moveY = 0;
+
+                    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                        moveX = Math.sign(deltaX);
+                    } else if (deltaY !== 0) {
+                        moveY = Math.sign(deltaY);
+                    }
+
+                    targetGridX = enemyGridX + moveX;
+                    targetGridY = enemyGridY + moveY;
+                } else if (Math.random() < 0.1) {
+                    const possibleMoves = [];
+                    if (enemyGridY > 0 && maze[enemyGridY - 1][enemyGridX] === 0) possibleMoves.push({ x: 0, y: -1 });
+                    if (enemyGridY < maze.length - 1 && maze[enemyGridY + 1][enemyGridX] === 0) possibleMoves.push({ x: 0, y: 1 });
+                    if (enemyGridX > 0 && maze[enemyGridY - 1][enemyGridX] === 0) possibleMoves.push({ x: -1, y: 0 });
+                    if (enemyGridX < maze[0].length - 1 && maze[enemyGridY][enemyGridX + 1] === 0) possibleMoves.push({ x: 1, y: 0 });
+
+                    if (possibleMoves.length > 0) {
+                        const move = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+                        targetGridX = enemyGridX + move.x;
+                        targetGridY = enemyGridY + move.y;
+                    }
+                }
+
+                if (targetGridY >= 0 && targetGridY < maze.length && targetGridX >= 0 && targetGridX < maze[0].length && maze[targetGridY][targetGridX] !== 1) {
+                    enemy.moving = true;
+                    enemy.targetX = targetGridX * cellSize;
+                    enemy.targetY = targetGridY * cellSize;
+                    animateMove(enemy, enemy.targetX, enemy.targetY, () => {
+                        enemy.moving = false;
+                        enemy.targetX = null;
+                        enemy.targetY = null;
+                    });
+                }
+            }
+        }
+
+        function canSeePlayer(enemy) {
+            const enemyGridX = Math.floor(enemy.x / cellSize);
+            const enemyGridY = Math.floor(enemy.y / cellSize);
+            const playerGridX = Math.floor(player.x / cellSize);
+            const playerGridY = Math.floor(player.y / cellSize);
+
+            let x = enemyGridX;
+            let y = enemyGridY;
+            const dx = Math.abs(playerGridX - enemyGridX);
+            const dy = Math.abs(playerGridY - enemyGridY);
+            const sx = (enemyGridX < playerGridX) ? 1 : -1;
+            const sy = (enemyGridY < playerGridY) ? 1 : -1;
+            let err = dx - dy;
+
+            while (x !== playerGridX || y !== playerGridY) {
+                if (x < 0 || x >= maze[0].length || y < 0 || y >= maze.length || maze[y][x] === 1) {
+                    return false;
+                }
+                const e2 = 2 * err;
+                if (e2 > -dy) { err -= dy; x += sx; }
+                if (e2 < dx) { err += dx; y += sy; }
+            }
+            return true;
+        }
+
+        function drawMaze() {
+            for (let y = 0; y < maze.length; y++) {
+                for (let x = 0; x < maze[0].length; x++) {
+                    const worldX = x * cellSize;
+                    const worldY = y * cellSize;
+
+                    const distanceToPlayer = Math.sqrt(Math.pow((player.x + player.size / 2 - worldX - cellSize / 2), 2) + Math.pow((player.y + player.size / 2 - worldY - cellSize / 2), 2));
+                    if (distanceToPlayer < visionRadius) {
+                        if (maze[y][x] === 1) {
+                            ctx.fillStyle = 'darkgrey';
+                            ctx.fillRect(worldX, worldY, cellSize, cellSize);
+                        } else if (maze[y][x] === 2) {
+                            ctx.fillStyle = 'green';
+                            ctx.fillRect(worldX, worldY, cellSize, cellSize);
+                        } else {
+                            ctx.fillStyle = 'white';
+                            ctx.fillRect(worldX, worldY, cellSize, cellSize);
+                        }
+                    } else {
+                        ctx.fillStyle = 'black';
+                        ctx.fillRect(worldX, worldY, cellSize, cellSize);
+                    }
+                }
+            }
+        }
+
+        function drawPlayer() {
+            if (!player) return;
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(player.x, player.y, player.size, player.size);
+
+            if (player.isAttacking) {
+                ctx.strokeStyle = 'red';
+                ctx.lineWidth = 5;
+                ctx.strokeRect(player.x - cellSize, player.y - cellSize, player.size + 2 * cellSize, player.size + 2 * cellSize);
+            }
+        }
+
+        function drawEnemies() {
+            for (const enemy of enemies) {
+                ctx.fillStyle = 'red';
+                ctx.fillRect(enemy.x, enemy.y, enemy.size, enemy.size);
+            }
+        }
+
+        function gameLoop() {
+            if (!gameStarted) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawMaze();
+            drawEnemies();
+            drawPlayer();
+
+            const playerGridX = Math.floor(player.x / cellSize);
+            const playerGridY = Math.floor(player.y / cellSize);
+            if (maze[playerGridY] && maze[playerGridY][playerGridX] === 2) {
+                gameWon();
+                return;
+            }
+
+            updateEnemies();
+
+            animationFrameId = requestAnimationFrame(gameLoop); // Atribui o ID ao iniciar o loop
+        }
+
+        function gameOver() {
+            gameStarted = false;
+            if (animationFrameId) cancelAnimationFrame(animationFrameId); // Cancela a animação
+            alert('Game Over!');
+            startScreen.style.display = 'flex';
+            controls.style.display = 'none';
+        }
+
+        function gameWon() {
+            gameStarted = false;
+            if (animationFrameId) cancelAnimationFrame(animationFrameId); // Cancela a animação
+            alert('Você venceu!');
+            startScreen.style.display = 'flex';
+            controls.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
