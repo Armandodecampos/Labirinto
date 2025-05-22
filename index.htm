@@ -8,51 +8,53 @@
             margin: 0;
             overflow: hidden;
             background-color: black;
-            display: flex; /* Torna o body um contêiner flexível */
-            flex-direction: column; /* Organiza os itens em coluna */
-            height: 100vh; /* Garante que o body ocupe 100% da altura da viewport */
-            width: 100vw; /* Garante que o body ocupe 100% da largura da viewport */
-            /* Impede a seleção de texto globalmente */
-            -webkit-user-select: none; /* Safari */
-            -moz-user-select: none; /* Firefox */
-            -ms-user-select: none; /* IE/Edge */
-            user-select: none; /* Standard */
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
 
         #gameContainer {
             display: flex;
             flex-direction: column;
-            flex-grow: 1; /* Permite que o contêiner do jogo preencha o espaço disponível */
-            position: relative; /* Necessário para posicionar o startScreen e gameOverScreen corretamente */
-            overflow: hidden; /* Garante que nada transborde do container */
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden;
+            /* Add padding-bottom to avoid content being covered by fixed controls */
+            padding-bottom: 0; /* This will be dynamically set by JavaScript */
+            box-sizing: border-box; /* Ensures padding is included in the total height */
         }
 
         #gameCanvas {
             background-color: black;
             width: 100%;
-            height: 100%; /* Ocupa todo o espaço vertical disponível dentro do gameContainer */
-            display: block; /* Remove o espaço extra que o canvas pode ter */
-            z-index: 10; /* Z-index menor para ficar por baixo das telas de fim de jogo */
-            position: absolute; /* Para que as telas de fim de jogo possam cobrir tudo */
+            height: 100%;
+            display: block;
+            z-index: 10;
+            position: absolute;
         }
 
         /* Estilos da tela inicial */
         #startScreen {
-            position: absolute; /* Posição absoluta dentro do gameContainer */
+            position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.8); /* Mantido com opacidade para a tela inicial */
+            background-color: rgba(0, 0, 0, 0.8);
             color: white;
-            padding: 3vw; /* Redimensiona padding com base na largura da viewport */
+            padding: 3vw;
             border-radius: 5px;
             text-align: center;
             z-index: 20;
-            max-width: 90vw; /* Limita a largura máxima para telas maiores */
+            max-width: 90vw;
         }
         #startButton {
-            padding: 2vw 4vw; /* Redimensiona padding com base na largura da viewport */
-            font-size: 3.5vw; /* Redimensiona fonte com base na largura da viewport */
+            padding: 2vw 4vw;
+            font-size: 3.5vw;
             cursor: pointer;
             background-color: #007bff;
             color: white;
@@ -61,27 +63,27 @@
         }
 
         /* Estilos das telas de Fim de Jogo (Game Over e Game Won) */
-        .end-game-screen { /* Classe comum para ambas as telas de fim de jogo */
+        .end-game-screen {
             position: absolute;
-            top: 0; /* Começa no topo */
-            left: 0; /* Começa na esquerda */
-            width: 100%; /* Ocupa 100% da largura do gameContainer */
-            height: 100%; /* Ocupa 100% da altura do gameContainer */
-            background-color: rgb(0, 0, 0); /* Preto sólido */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgb(0, 0, 0);
             color: white;
-            display: none; /* Inicia oculto */
-            flex-direction: column; /* Para alinhar o texto e o botão */
+            display: none;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 30; /* Z-index maior para ficar por cima de tudo */
-            font-size: 5vw; /* Redimensiona fonte com base na largura da viewport */
+            z-index: 30;
+            font-size: 5vw;
             font-weight: bold;
         }
 
-        .end-game-screen button { /* Estilo comum para os botões de reinício */
-            margin-top: 2vw; /* Redimensiona margin com base na largura da viewport */
-            padding: 2vw 4vw; /* Redimensiona padding com base na largura da viewport */
-            font-size: 3.5vw; /* Redimensiona fonte com base na largura da viewport */
+        .end-game-screen button {
+            margin-top: 2vw;
+            padding: 2vw 4vw;
+            font-size: 3.5vw;
             cursor: pointer;
             background-color: #28a745;
             color: white;
@@ -91,37 +93,40 @@
 
         /* Controles - Conteiner principal que engloba todos os botões */
         #controls {
-            display: flex; /* Permite sub-contêineres lado a lado */
-            justify-content: space-between; /* Espaça os grupos de botões */
-            align-items: center; /* Alinha os botões verticalmente ao centro */
-            padding: 1.5vh 2vw; /* Adiciona algum preenchimento nas laterais e acima, usando vh e vw */
-            background-color: #222; /* Cor de fundo para a área de controles */
-            flex-shrink: 0; /* Garante que os controles não encolham */
-            z-index: 15; /* Z-index para os controles, entre o canvas e as telas de fim de jogo */
-            box-sizing: border-box; /* Inclui padding e borda no tamanho total */
-            padding-bottom: 30px; /* Mantido para iOS safe area */
-            /* Removido position: fixed para que os controles sejam parte do fluxo flex do body */
+            position: fixed; /* Changed to fixed */
+            bottom: 0; /* Aligns to the bottom */
+            left: 0; /* Aligns to the left */
+            right: 0; /* Aligns to the right */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5vh 2vw;
+            background-color: #222;
+            flex-shrink: 0;
+            z-index: 15;
+            box-sizing: border-box;
+            padding-bottom: 30px;
         }
 
         /* Grupo de botões de movimento em cruz */
         #directional-controls {
-            display: grid; /* Usa grid para o layout em cruz */
-            grid-template-columns: repeat(3, 1fr); /* 3 colunas, cada uma ocupando uma fração do espaço disponível */
-            grid-template-rows: repeat(3, 1fr); /* 3 linhas, cada uma ocupando uma fração do espaço disponível */
-            gap: 1.5vmin; /* Espaçamento entre os botões, usa vmin para ser relativo à menor dimensão da viewport */
-            width: 35vmin; /* Aumentado de 25vmin para 35vmin */
-            height: 35vmin; /* Aumentado de 25vmin para 35vmin */
-            max-width: 180px; /* Levemente aumentado o limite máximo */
-            max-height: 180px; /* Levemente aumentado o limite máximo */
-            aspect-ratio: 1 / 1; /* Mantém a proporção de 1:1 (quadrado) */
-            margin-left: 1vw; /* Espaço da borda esquerda, relativo à largura da viewport */
-            flex-shrink: 0; /* Impede que encolha */
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 1.5vmin;
+            width: 35vmin;
+            height: 35vmin;
+            max-width: 180px;
+            max-height: 180px;
+            aspect-ratio: 1 / 1;
+            margin-left: 1vw;
+            flex-shrink: 0;
         }
 
         #directional-controls button {
-            width: 100%; /* Ocupa 100% da célula do grid */
-            height: 100%; /* Ocupa 100% da célula do grid */
-            font-size: 6vw; /* Aumentado o tamanho da seta, relativo à largura da viewport */
+            width: 100%;
+            height: 100%;
+            font-size: 6vw;
             background-color: #333;
             color: white;
             border: 1px solid #555;
@@ -131,8 +136,7 @@
             justify-content: center;
             align-items: center;
             padding: 0;
-            box-sizing: border-box; /* Inclui padding e borda no tamanho total */
-            /* Impede a seleção de texto para os botões */
+            box-sizing: border-box;
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
@@ -151,17 +155,17 @@
         }
 
         /* Espaço entre os controles direcionais e o botão de ataque */
-        #controls > div:first-child { /* Seleciona o primeiro div dentro de #controls (directional-controls) */
-            margin-right: 4vw; /* Adiciona margem à direita para criar espaço */
+        #controls > div:first-child {
+            margin-right: 4vw;
         }
 
         /* Botão de ataque */
         #attack-button {
-            width: 20vmin; /* Aumentado de 15vmin para 20vmin */
-            height: 20vmin; /* Aumentado de 15vmin para 20vmin */
-            max-width: 130px; /* Levemente aumentado o limite máximo */
-            max-height: 130px; /* Levemente aumentado o limite máximo */
-            font-size: 4.5vw; /* Aumentado o tamanho da fonte */
+            width: 20vmin;
+            height: 20vmin;
+            max-width: 130px;
+            max-height: 130px;
+            font-size: 4.5vw;
             background-color: #dc3545;
             color: white;
             border: 1px solid #bb2d3b;
@@ -171,10 +175,9 @@
             justify-content: center;
             align-items: center;
             padding: 0;
-            box-sizing: border-box; /* Inclui padding e borda no tamanho total */
-            margin-right: 2vw; /* Espaço da borda direita, relativo à largura da viewport */
-            flex-shrink: 0; /* Impede que encolha */
-            /* Impede a seleção de texto para o botão */
+            box-sizing: border-box;
+            margin-right: 2vw;
+            flex-shrink: 0;
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
@@ -187,36 +190,34 @@
 
         /* Media Queries para ajustes finos em diferentes tamanhos de tela */
         @media (orientation: landscape) {
-            /* Em modo paisagem, ajuste o tamanho dos controles para não serem muito grandes */
             #directional-controls {
-                width: 28vmin; /* Ajustado para paisagem */
-                height: 28vmin; /* Ajustado para paisagem */
+                width: 28vmin;
+                height: 28vmin;
             }
             #attack-button {
-                width: 16vmin; /* Ajustado para paisagem */
-                height: 16vmin; /* Ajustado para paisagem */
+                width: 16vmin;
+                height: 16vmin;
             }
             #directional-controls button {
-                font-size: 5vw; /* Ajustado para paisagem */
+                font-size: 5vw;
             }
             #attack-button {
-                font-size: 3.5vw; /* Ajustado para paisagem */
+                font-size: 3.5vw;
             }
         }
 
         @media (min-width: 768px) {
-            /* Para tablets e desktops, defina tamanhos fixos para os botões */
             #directional-controls {
-                width: 180px; /* Mantém o limite máximo para desktop */
-                height: 180px; /* Mantém o limite máximo para desktop */
+                width: 180px;
+                height: 180px;
             }
             #directional-controls button {
-                font-size: 45px; /* Aumentado para desktop */
+                font-size: 45px;
             }
             #attack-button {
-                width: 130px; /* Mantém o limite máximo para desktop */
-                height: 130px; /* Mantém o limite máximo para desktop */
-                font-size: 30px; /* Aumentado para desktop */
+                width: 130px;
+                height: 130px;
+                font-size: 30px;
             }
         }
     </style>
@@ -260,6 +261,7 @@
         const restartButton = document.getElementById('restartButton');
         const gameWonScreen = document.getElementById('gameWonScreen');
         const playAgainButton = document.getElementById('playAgainButton');
+        const gameContainer = document.getElementById('gameContainer'); // Get gameContainer
 
         let gameStarted = false;
         let maze;
@@ -304,12 +306,8 @@
             playerMoving = false;
             playerMoveQueue = [];
 
-            resizeGameElements(); // Chama a função para redimensionar todos os elementos do jogo
+            resizeGameElements();
             
-            // O cellSize é fundamental para o labirinto e o movimento. 
-            // Garanta que ele seja calculado uma vez e mantenha-se consistente.
-            // Para evitar andar em paredes, o labirinto e o player devem ter tamanhos baseados nesse cellSize.
-            // O número 20 é um fator de escala, pode ser ajustado para um labirinto maior ou menor.
             cellSize = Math.floor(Math.min(canvas.width, canvas.height) / 20); 
             visionRadius = cellSize * 5;
 
@@ -327,17 +325,19 @@
         }
 
         function resizeGameElements() {
-            const gameContainer = document.getElementById('gameContainer');
+            // Set gameContainer height based on controls height
+            const controlsHeight = controls.offsetHeight;
+            gameContainer.style.height = `calc(100vh - ${controlsHeight}px)`;
+            
             canvas.width = gameContainer.clientWidth;
             canvas.height = gameContainer.clientHeight;
         }
 
         window.addEventListener('resize', () => {
             if (gameStarted) {
-                resizeGameElements(); // Redimensiona todos os elementos quando a tela é redimensionada
+                resizeGameElements();
                 cellSize = Math.floor(Math.min(canvas.width, canvas.height) / 20);
                 visionRadius = cellSize * 5;
-                // Reajustar posições de player e inimigos para a nova cellSize
                 player.x = Math.floor(player.x / cellSize) * cellSize;
                 player.y = Math.floor(player.y / cellSize) * cellSize;
                 player.size = cellSize * 0.8;
@@ -347,17 +347,24 @@
                     enemy.y = Math.floor(enemy.y / cellSize) * cellSize;
                     enemy.size = cellSize * 0.6;
                 });
+            } else {
+                // If game not started, just ensure initial sizing is correct on resize
+                resizeGameElements();
             }
         });
 
+        // Initial call to resize elements when the page loads
+        document.addEventListener('DOMContentLoaded', resizeGameElements);
+
+
         function generateMaze(width, height) {
-            const grid = Array(height).fill(null).map(() => Array(width).fill(1)); // 1 = parede
+            const grid = Array(height).fill(null).map(() => Array(width).fill(1));
             const startX = 1;
             const startY = 1;
-            let path = [[startY, startX]]; // Começa a gerar o caminho a partir desta célula
-            grid[startY][startX] = 0; // 0 = caminho
+            let path = [[startY, startX]];
+            grid[startY][startX] = 0;
 
-            let exitCandidateCells = []; // Armazenará células que podem ser a saída
+            let exitCandidateCells = [];
 
             while (path.length > 0) {
                 const [y, x] = path.pop();
@@ -367,14 +374,10 @@
                     const newY = y + dy;
                     const newX = x + dx;
 
-                    // Verifica se a nova célula está dentro dos limites e é uma parede
-                    // e se o "caminho" entre as células também é uma parede para ser quebrado
                     if (newY > 0 && newY < height - 1 && newX > 0 && newX < width - 1 && grid[newY][newX] === 1 && grid[y + dy / 2][x + dx / 2] === 1) {
-                        grid[newY][newX] = 0; // Transforma a célula em caminho
-                        grid[y + dy / 2][x + dx / 2] = 0; // Transforma a "parede" entre as células em caminho
+                        grid[newY][newX] = 0;
+                        grid[y + dy / 2][x + dx / 2] = 0;
 
-                        // Adiciona a nova célula de caminho como um candidato para a saída,
-                        // especialmente se ela estiver perto da borda direita ou inferior.
                         if (newY >= height - 3 || newX >= width - 3) {
                             exitCandidateCells.push([newY, newX]);
                         }
@@ -383,16 +386,13 @@
                 }
             }
 
-            // Garante que a saída esteja sempre no final do labirinto
             let exitY = height - 2;
             let exitX = width - 2;
 
-            // Se a célula de saída padrão for uma parede, tente encontrar outra célula de caminho próxima ao canto
             if (grid[exitY][exitX] === 1 || grid[exitY][exitX] === undefined) {
                 let foundExit = false;
                 for (let i = exitCandidateCells.length - 1; i >= 0; i--) {
                     const [candY, candX] = exitCandidateCells[i];
-                    // Prefere células mais próximas do canto inferior direito
                     if (grid[candY][candX] === 0 && (candY >= height - 3 || candX >= width - 3)) {
                         exitY = candY;
                         exitX = candX;
@@ -401,7 +401,6 @@
                     }
                 }
 
-                // Último recurso: encontra qualquer caminho disponível no final do labirinto
                 if (!foundExit) {
                     for (let r = height - 1; r >= 0; r--) {
                         for (let c = width - 1; c >= 0; c--) {
@@ -416,7 +415,7 @@
                     }
                 }
             }
-            grid[exitY][exitX] = 2; // Define a saída como 2
+            grid[exitY][exitX] = 2;
             return grid;
         }
 
@@ -429,13 +428,11 @@
         }
 
         function createPlayer() {
-            // Tenta posicionar o player na primeira célula livre da primeira coluna
             for (let y = 0; y < maze.length; y++) {
                 if (maze[y][0] === 0) {
                     return { x: 0 * cellSize, y: y * cellSize, size: cellSize * 0.8, speed: 5, isAttacking: false, attackRange: cellSize };
                 }
             }
-            // Fallback: se não encontrar na primeira coluna, posiciona em (1,1)
             return { x: 1 * cellSize, y: 1 * cellSize, size: cellSize * 0.8, speed: 5, isAttacking: false, attackRange: cellSize };
         }
 
@@ -448,7 +445,6 @@
                 const randomY = Math.floor(Math.random() * maze.length);
                 const randomX = Math.floor(Math.random() * maze[0].length);
 
-                // Garante que o inimigo não spawne muito perto do jogador ou em uma parede ou saída
                 if (maze[randomY][randomX] === 0 && maze[randomY][randomX] !== 2 && (Math.abs(randomX - player.x / cellSize) > 5 || Math.abs(randomY - player.y / cellSize) > 5)) {
                     enemiesArray.push({ x: randomX * cellSize, y: randomY * cellSize, size: cellSize * 0.6, speed: 3, moving: false, targetX: null, targetY: null, moveTimer: 0 });
                     placedEnemies++;
@@ -479,7 +475,6 @@
                 case 'right': nextGridX++; targetX += cellSize; break;
             }
 
-            // Verifica se a próxima célula é válida (não é parede)
             if (nextGridY >= 0 && nextGridY < maze.length && nextGridX >= 0 && nextGridX < maze[0].length && maze[nextGridY][nextGridX] !== 1) {
                 playerMoving = true;
                 animateMove(player, targetX, targetY, () => {
@@ -571,7 +566,7 @@
                     }
 
                     enemy.moveTimer += 1;
-                    if (enemy.moveTimer < 30) continue; // Inimigo espera um pouco antes de se mover novamente
+                    if (enemy.moveTimer < 30) continue;
                     enemy.moveTimer = 0;
 
                     const enemyGridX = Math.floor(enemy.x / cellSize);
@@ -590,13 +585,11 @@
                         let moveX = 0;
                         let moveY = 0;
 
-                        // Tenta mover na direção que reduz a maior diferença (X ou Y)
                         if (Math.abs(deltaX) > Math.abs(deltaY)) {
                             moveX = Math.sign(deltaX);
-                        } else if (deltaY !== 0) { // Se as diferenças forem iguais, prefere Y ou se Y é a maior
+                        } else if (deltaY !== 0) {
                             moveY = Math.sign(deltaY);
                         }
-                        // Se só houver movimento em uma direção (ex: deltaX é 0, mas deltaY não), tenta mover em Y
                         if (moveX === 0 && moveY === 0 && (deltaX !== 0 || deltaY !== 0)) {
                             if (deltaX !== 0) moveX = Math.sign(deltaX);
                             else if (deltaY !== 0) moveY = Math.sign(deltaY);
@@ -605,9 +598,7 @@
                         targetGridX = enemyGridX + moveX;
                         targetGridY = enemyGridY + moveY;
 
-                        // Se o caminho direto estiver bloqueado por uma parede, tenta desviar
                         if (maze[targetGridY] && maze[targetGridY][targetGridX] === 1) {
-                            // Tenta mover na direção alternativa
                             if (moveX !== 0 && maze[enemyGridY + Math.sign(deltaY)] && maze[enemyGridY + Math.sign(deltaY)][enemyGridX] !== 1) {
                                 targetGridX = enemyGridX;
                                 targetGridY = enemyGridY + Math.sign(deltaY);
@@ -615,9 +606,8 @@
                                 targetGridX = enemyGridX + Math.sign(deltaX);
                                 targetGridY = enemyGridY;
                             } else {
-                                // Se ainda assim estiver bloqueado, tenta um movimento aleatório (com menos chance)
                                 targetGridX = enemyGridX;
-                                targetGridY = enemyGridY; // Reseta para a posição atual
+                                targetGridY = enemyGridY;
                                 const possibleMoves = [];
                                 if (enemyGridY > 0 && maze[enemyGridY - 1][enemyGridX] === 0) possibleMoves.push({ x: 0, y: -1 });
                                 if (enemyGridY < maze.length - 1 && maze[enemyGridY + 1][enemyGridX] === 0) possibleMoves.push({ x: 0, y: 1 });
@@ -631,7 +621,7 @@
                                 }
                             }
                         }
-                    } else if (Math.random() < 0.1) { // Movimento aleatório se não vê o player (10% de chance)
+                    } else if (Math.random() < 0.1) {
                         const possibleMoves = [];
                         if (enemyGridY > 0 && maze[enemyGridY - 1][enemyGridX] === 0) possibleMoves.push({ x: 0, y: -1 });
                         if (enemyGridY < maze.length - 1 && maze[enemyGridY + 1][enemyGridX] === 0) possibleMoves.push({ x: 0, y: 1 });
@@ -645,7 +635,6 @@
                         }
                     }
 
-                    // Somente move se a célula alvo for um caminho
                     if (targetGridY >= 0 && targetGridY < maze.length && targetGridX >= 0 && targetGridX < maze[0].length && maze[targetGridY][targetGridX] === 0) {
                         enemy.moving = true;
                         enemy.targetX = targetGridX * cellSize;
@@ -666,13 +655,11 @@
             const playerGridX = Math.floor(player.x / cellSize);
             const playerGridY = Math.floor(player.y / cellSize);
 
-            // Verifica se o player está dentro do raio de visão do inimigo
             const dist = Math.sqrt(Math.pow(playerGridX - enemyGridX, 2) + Math.pow(playerGridY - enemyGridY, 2));
-            if (dist > (visionRadius / cellSize)) { // Compara distâncias em termos de células
+            if (dist > (visionRadius / cellSize)) {
                 return false;
             }
 
-            // Algoritmo de linha de visão (Bresenham's Line Algorithm adaptado)
             let x0 = enemyGridX;
             let y0 = enemyGridY;
             let x1 = playerGridX;
@@ -685,10 +672,10 @@
             let err = dx - dy;
 
             while (true) {
-                if (maze[y0][x0] === 1) { // Se encontrar uma parede no caminho
+                if (maze[y0][x0] === 1) {
                     return false;
                 }
-                if (x0 === x1 && y0 === y1) { // Chegou ao destino sem encontrar parede
+                if (x0 === x1 && y0 === y1) {
                     break;
                 }
                 let e2 = 2 * err;
@@ -699,7 +686,6 @@
         }
 
         function isEnemyVisible(enemy) {
-            // Este é apenas para renderização, não para IA do inimigo
             const distance = Math.sqrt(
                 Math.pow((player.x + player.size / 2 - enemy.x - enemy.size / 2), 2) +
                 Math.pow((player.y + player.size / 2 - enemy.y - enemy.size / 2), 2)
@@ -756,7 +742,6 @@
             if (player.isAttacking) {
                 ctx.strokeStyle = 'red';
                 ctx.lineWidth = 5;
-                // A área de ataque é desenhada relativa à posição do player
                 ctx.strokeRect(player.x - cellSize, player.y - cellSize, player.size + 2 * cellSize, player.size + 2 * cellSize);
             }
         }
