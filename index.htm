@@ -91,6 +91,10 @@
         /* Controles - Conteiner principal que engloba todos os botões */
         #controls {
             display: flex; /* Permite sub-contêineres lado a lado */
+            position:fixed;
+            left:0;
+            right:0;
+            bottom:0px;
             justify-content: space-between; /* Espaça os grupos de botões */
             align-items: center; /* Alinha os botões verticalmente ao centro */
             padding: 1.5vh 2vw; /* Adiciona algum preenchimento nas laterais e acima, usando vh e vw */
@@ -98,9 +102,9 @@
             flex-shrink: 0; /* Garante que os controles não encolham */
             z-index: 15; /* Z-index para os controles, entre o canvas e as telas de fim de jogo */
             box-sizing: border-box; /* Inclui padding e borda no tamanho total */
+            padding-bottom:30px;
 
-            /* NOVO: Adiciona padding na parte inferior para evitar a barra de navegação */
-            padding-bottom: calc(1.5vh + env(safe-area-inset-bottom));
+
         }
 
         /* Grupo de botões de movimento em cruz */
