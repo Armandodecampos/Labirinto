@@ -1,31 +1,186 @@
-
 <!DOCTYPE html>
 <html>
 <head>
     <title>Jogo do Labirinto</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
     <style>
-        body { margin: 0; overflow: hidden; background-color: black; }
-        #gameCanvas { background-color: black; }
-        #controls { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; }
-        #controls button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
-        #startScreen { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(0, 0, 0, 0.8); color: white; padding: 20px; border-radius: 5px; text-align: center; }
-        #startButton { padding: 15px 30px; font-size: 20px; cursor: pointer; }
-        #controls { display: none; }
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: black;
+            display: flex; /* Torna o body um contêiner flexível */
+            flex-direction: column; /* Organiza os itens em coluna */
+            height: 100vh; /* Garante que o body ocupe 100% da altura da viewport */
+            width: 100vw; /* Garante que o body ocupe 100% da largura da viewport */
+        }
+
+        #gameContainer {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1; /* Permite que o contêiner do jogo preencha o espaço disponível */
+            position: relative; /* Necessário para posicionar o startScreen e gameOverScreen corretamente */
+        }
+
+        #gameCanvas {
+            background-color: black;
+            width: 100%;
+            height: 100%; /* Ocupa todo o espaço vertical disponível dentro do gameContainer */
+            display: block; /* Remove o espaço extra que o canvas pode ter */
+            z-index: 10; /* Z-index menor para ficar por baixo das telas de fim de jogo */
+            position: absolute; /* Para que as telas de fim de jogo possam cobrir tudo */
+        }
+
+        /* Estilos da tela inicial */
+        #startScreen {
+            position: absolute; /* Posição absoluta dentro do gameContainer */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8); /* Mantido com opacidade para a tela inicial */
+            color: white;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+            z-index: 20;
+        }
+        #startButton {
+            padding: 15px 30px;
+            font-size: 20px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        /* Estilos das telas de Fim de Jogo (Game Over e Game Won) */
+        .end-game-screen { /* Classe comum para ambas as telas de fim de jogo */
+            position: absolute;
+            top: 0; /* Começa no topo */
+            left: 0; /* Começa na esquerda */
+            width: 100%; /* Ocupa 100% da largura do gameContainer */
+            height: 100%; /* Ocupa 100% da altura do gameContainer */
+            background-color: rgb(0, 0, 0); /* Preto sólido */
+            color: white;
+            display: none; /* Inicia oculto */
+            flex-direction: column; /* Para alinhar o texto e o botão */
+            align-items: center;
+            justify-content: center;
+            z-index: 30; /* Z-index maior para ficar por cima de tudo */
+            font-size: 3em;
+            font-weight: bold;
+        }
+
+        .end-game-screen button { /* Estilo comum para os botões de reinício */
+            margin-top: 20px;
+            padding: 15px 30px;
+            font-size: 20px;
+            cursor: pointer;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        /* Controles - Conteiner principal que engloba todos os botões */
+        #controls {
+            display: flex; /* Permite sub-contêineres lado a lado */
+            justify-content: space-between; /* Espaça os grupos de botões */
+            align-items: center; /* Alinha os botões verticalmente ao centro */
+            padding: 10px 20px; /* Adiciona algum preenchimento nas laterais e acima */
+            background-color: #222; /* Cor de fundo para a área de controles */
+            flex-shrink: 0; /* Garante que os controles não encolham */
+            z-index: 15; /* Z-index para os controles, entre o canvas e as telas de fim de jogo */
+        }
+
+        /* Grupo de botões de movimento em cruz */
+        #directional-controls {
+            display: grid; /* Usa grid para o layout em cruz */
+            grid-template-columns: repeat(3, 60px); /* 3 colunas de 60px */
+            grid-template-rows: repeat(3, 60px); /* 3 linhas de 60px */
+            gap: 5px; /* Espaçamento entre os botões */
+            width: 190px; /* Largura total dos botões de movimento (3*60 + 2*5) */
+            height: 190px; /* Altura total dos botões de movimento (3*60 + 2*5) */
+            margin-left: 20px; /* Espaço da borda esquerda */
+        }
+
+        #directional-controls button {
+            width: 60px;
+            height: 60px;
+            font-size: 30px; /* Aumenta o tamanho da seta */
+            background-color: #333;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            box-sizing: border-box; /* Inclui padding e borda no tamanho total */
+        }
+
+        /* Posicionamento dos botões dentro do grid (formato de cruz) */
+        #btn-up { grid-area: 1 / 2 / 2 / 3; }
+        #btn-left { grid-area: 2 / 1 / 3 / 2; }
+        #btn-center { grid-area: 2 / 2 / 3 / 3; opacity: 0; pointer-events: none;}
+        #btn-right { grid-area: 2 / 3 / 3 / 4; }
+        #btn-down { grid-area: 3 / 2 / 4 / 3; }
+
+        #directional-controls button:active {
+            background-color: #555;
+        }
+
+        /* Botão de ataque */
+        #attack-button {
+            width: 100px;
+            height: 100px;
+            font-size: 20px;
+            background-color: #dc3545;
+            color: white;
+            border: 1px solid #bb2d3b;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            box-sizing: border-box; /* Inclui padding e borda no tamanho total */
+            margin-right: 20px; /* Espaço da borda direita */
+        }
+
+        #attack-button:active {
+            background-color: #bb2d3b;
+        }
     </style>
 </head>
 <body>
-    <div id="startScreen">
-        <h1>Jogo do Labirinto</h1>
-        <button id="startButton">Iniciar Jogo</button>
+    <div id="gameContainer">
+        <div id="startScreen">
+            <h1>Jogo do Labirinto</h1>
+            <button id="startButton">Iniciar Jogo</button>
+        </div>
+        <div id="gameOverScreen" class="end-game-screen">
+            Você perdeu!
+            <button id="restartButton">Tentar Novamente</button>
+        </div>
+        <div id="gameWonScreen" class="end-game-screen">
+            Você Venceu!
+            <button id="playAgainButton">Jogar Novamente</button>
+        </div>
+        <canvas id="gameCanvas"></canvas>
     </div>
-    <canvas id="gameCanvas"></canvas>
+
     <div id="controls">
-        <button onclick="movePlayer('up')">Cima</button>
-        <button onclick="movePlayer('down')">Baixo</button>
-        <button onclick="movePlayer('left')">Esquerda</button>
-        <button onclick="movePlayer('right')">Direita</button>
-        <button onclick="attack()">Atacar</button>
+        <div id="directional-controls">
+            <button id="btn-up" onmousedown="movePlayer('up')" ontouchstart="movePlayer('up')">&#9650;</button>
+            <button id="btn-left" onmousedown="movePlayer('left')" ontouchstart="movePlayer('left')">&#9664;</button>
+            <div id="btn-center"></div>
+            <button id="btn-right" onmousedown="movePlayer('right')" ontouchstart="movePlayer('right')">&#9654;</button>
+            <button id="btn-down" onmousedown="movePlayer('down')" ontouchstart="movePlayer('down')">&#9660;</button>
+        </div>
+
+        <button id="attack-button" onmousedown="attack()" ontouchstart="attack()">Atacar</button>
     </div>
 
     <script>
@@ -34,6 +189,10 @@
         const startScreen = document.getElementById('startScreen');
         const startButton = document.getElementById('startButton');
         const controls = document.getElementById('controls');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const restartButton = document.getElementById('restartButton');
+        const gameWonScreen = document.getElementById('gameWonScreen');
+        const playAgainButton = document.getElementById('playAgainButton');
 
         let gameStarted = false;
         let maze;
@@ -44,16 +203,40 @@
         let gameSpeed = 75;
         let playerMoving = false;
         let playerMoveQueue = [];
-        let animationFrameId; // Armazena o ID do requestAnimationFrame
+        let animationFrameId;
 
         startButton.addEventListener('click', () => {
             startScreen.style.display = 'none';
-            controls.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            gameWonScreen.style.display = 'none';
+            controls.style.display = 'flex';
+            startGame();
+        });
+
+        restartButton.addEventListener('click', () => {
+            gameOverScreen.style.display = 'none';
+            startScreen.style.display = 'none';
+            gameWonScreen.style.display = 'none';
+            controls.style.display = 'flex';
+            startGame();
+        });
+
+        playAgainButton.addEventListener('click', () => {
+            gameWonScreen.style.display = 'none';
+            startScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            controls.style.display = 'flex';
             startGame();
         });
 
         function startGame() {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
             gameStarted = true;
+            playerMoving = false;
+            playerMoveQueue = [];
+
             resizeCanvas();
             cellSize = Math.floor(Math.min(canvas.width, canvas.height) / 20);
             visionRadius = cellSize * 5;
@@ -65,25 +248,34 @@
             player.speed = 5;
             enemies.forEach(enemy => {
                 enemy.speed = 3;
-                enemy.moveTimer = 0; // Adiciona um timer para controlar o movimento de cada inimigo
+                enemy.moveTimer = 0;
             });
 
             gameLoop();
         }
 
         function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            const gameContainer = document.getElementById('gameContainer');
+            canvas.width = gameContainer.clientWidth;
+            canvas.height = gameContainer.clientHeight;
         }
 
-        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('resize', () => {
+            if (gameStarted) {
+                resizeCanvas();
+                cellSize = Math.floor(Math.min(canvas.width, canvas.height) / 20);
+                visionRadius = cellSize * 5;
+            }
+        });
 
         function generateMaze(width, height) {
-            const grid = Array(height).fill(null).map(() => Array(width).fill(1));
+            const grid = Array(height).fill(null).map(() => Array(width).fill(1)); // 1 = parede
             const startX = 1;
             const startY = 1;
-            let path = [[startY, startX]];
-            grid[startY][startX] = 0;
+            let path = [[startY, startX]]; // Começa a gerar o caminho a partir desta célula
+            grid[startY][startX] = 0; // 0 = caminho
+
+            let exitCandidateCells = []; // Armazenará células que podem ser a saída
 
             while (path.length > 0) {
                 const [y, x] = path.pop();
@@ -93,15 +285,52 @@
                     const newY = y + dy;
                     const newX = x + dx;
 
+                    // Verifica se a nova célula está dentro dos limites e é uma parede
                     if (newY > 0 && newY < height - 1 && newX > 0 && newX < width - 1 && grid[newY][newX] === 1) {
-                        grid[newY][newX] = 0;
-                        grid[y + dy / 2][x + dx / 2] = 0;
+                        grid[newY][newX] = 0; // Transforma a célula em caminho
+                        grid[y + dy / 2][x + dx / 2] = 0; // Transforma a "parede" entre as células em caminho
+
+                        // Adiciona a nova célula de caminho como um candidato para a saída,
+                        // especialmente se ela estiver perto da borda direita ou inferior.
+                        if (newY >= height - 3 || newX >= width - 3) {
+                             exitCandidateCells.push([newY, newX]);
+                        }
                         path.push([newY, newX]);
                     }
                 }
             }
 
-            grid[height - 2][width - 2] = 2;
+            let exitY = height - 2;
+            let exitX = width - 2;
+
+            if (grid[exitY][exitX] === 1 || grid[exitY][exitX] === undefined) {
+                let foundExit = false;
+                for (let i = exitCandidateCells.length - 1; i >= 0; i--) {
+                    const [candY, candX] = exitCandidateCells[i];
+                    if (grid[candY][candX] === 0) {
+                        exitY = candY;
+                        exitX = candX;
+                        foundExit = true;
+                        break;
+                    }
+                }
+
+                if (!foundExit) {
+                    for (let r = height - 1; r >= 0; r--) {
+                        for (let c = width - 1; c >= 0; c--) {
+                            if (grid[r][c] === 0) {
+                                exitY = r;
+                                exitX = c;
+                                foundExit = true;
+                                break;
+                            }
+                        }
+                        if (foundExit) break;
+                    }
+                }
+            }
+
+            grid[exitY][exitX] = 2; // Define a saída como 2
             return grid;
         }
 
@@ -132,7 +361,7 @@
                 const randomX = Math.floor(Math.random() * maze[0].length);
 
                 if (maze[randomY][randomX] === 0 && (Math.abs(randomX - player.x / cellSize) > 5 || Math.abs(randomY - player.y / cellSize) > 5)) {
-                    enemiesArray.push({ x: randomX * cellSize, y: randomY * cellSize, size: cellSize * 0.6, speed: 3, moving: false, targetX: null, targetY: null, moveTimer: 0 }); // Inicializa moveTimer
+                    enemiesArray.push({ x: randomX * cellSize, y: randomY * cellSize, size: cellSize * 0.6, speed: 3, moving: false, targetX: null, targetY: null, moveTimer: 0 });
                     placedEnemies++;
                 }
             }
@@ -140,6 +369,8 @@
         }
 
         function movePlayer(direction) {
+            if (!gameStarted) return;
+
             if (playerMoving) {
                 playerMoveQueue.push(direction);
                 return;
@@ -179,23 +410,24 @@
             let currentStep = 0;
 
             function animationFrame() {
-                if (!gameStarted) return; // Verifica se o jogo ainda está em andamento
+                if (!gameStarted) return;
                 entity.x += stepX;
                 entity.y += stepY;
                 currentStep++;
                 if (currentStep < steps) {
-                    animationFrameId = requestAnimationFrame(animationFrame); // Continua a animação
+                    animationFrameId = requestAnimationFrame(animationFrame);
                 } else {
                     entity.x = targetX;
                     entity.y = targetY;
                     if (callback) callback();
                 }
             }
-            animationFrameId = requestAnimationFrame(animationFrame); // Inicia a animação
+            animationFrameId = requestAnimationFrame(animationFrame);
         }
 
         function attack() {
-            if (!player || player.isAttacking) return;
+            if (!gameStarted || !player || player.isAttacking) return;
+
             player.isAttacking = true;
             setTimeout(() => {
                 player.isAttacking = false;
@@ -223,12 +455,7 @@
                 case 's': movePlayer('down'); break;
                 case 'a': movePlayer('left'); break;
                 case 'd': movePlayer('right'); break;
-            }
-        });
-
-        canvas.addEventListener('mousedown', () => {
-            if (gameStarted) {
-                attack();
+                case ' ': attack(); break;
             }
         });
 
@@ -237,72 +464,74 @@
                 const enemy = enemies[i];
                 const enemySpeedFactor = enemy.speed / cellSize;
 
-                if (enemy.moving) {
-                    if (Math.abs(enemy.x - enemy.targetX) < 1 && Math.abs(enemy.y - enemy.targetY) < 1) {
-                        enemy.moving = false;
-                        enemy.targetX = null;
-                        enemy.targetY = null;
-                    } else {
-                        const dx = enemy.targetX - enemy.x;
-                        const dy = enemy.targetY - enemy.y;
-                        const angle = Math.atan2(dy, dx);
-                        enemy.x += Math.cos(angle) * enemySpeedFactor;
-                        enemy.y += Math.sin(angle) * enemySpeedFactor;
-                    }
-                    continue;
-                }
-
-                enemy.moveTimer += 1;
-                if (enemy.moveTimer < 30) continue; // Controla a frequência de movimento dos inimigos (ajuste o valor 30)
-                enemy.moveTimer = 0; // Reseta o timer
-
-                const enemyGridX = Math.floor(enemy.x / cellSize);
-                const enemyGridY = Math.floor(enemy.y / cellSize);
-
-                let targetGridX = enemyGridX;
-                let targetGridY = enemyGridY;
-
-                if (canSeePlayer(enemy)) {
-                    const playerGridX = Math.floor(player.x / cellSize);
-                    const playerGridY = Math.floor(player.y / cellSize);
-
-                    const deltaX = playerGridX - enemyGridX;
-                    const deltaY = playerGridY - enemyGridY;
-
-                    let moveX = 0;
-                    let moveY = 0;
-
-                    if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                        moveX = Math.sign(deltaX);
-                    } else if (deltaY !== 0) {
-                        moveY = Math.sign(deltaY);
+                if (isEnemyVisible(enemy)) {
+                    if (enemy.moving) {
+                        if (Math.abs(enemy.x - enemy.targetX) < 1 && Math.abs(enemy.y - enemy.targetY) < 1) {
+                            enemy.moving = false;
+                            enemy.targetX = null;
+                            enemy.targetY = null;
+                        } else {
+                            const dx = enemy.targetX - enemy.x;
+                            const dy = enemy.targetY - enemy.y;
+                            const angle = Math.atan2(dy, dx);
+                            enemy.x += Math.cos(angle) * enemySpeedFactor;
+                            enemy.y += Math.sin(angle) * enemySpeedFactor;
+                        }
+                        continue;
                     }
 
-                    targetGridX = enemyGridX + moveX;
-                    targetGridY = enemyGridY + moveY;
-                } else if (Math.random() < 0.1) {
-                    const possibleMoves = [];
-                    if (enemyGridY > 0 && maze[enemyGridY - 1][enemyGridX] === 0) possibleMoves.push({ x: 0, y: -1 });
-                    if (enemyGridY < maze.length - 1 && maze[enemyGridY + 1][enemyGridX] === 0) possibleMoves.push({ x: 0, y: 1 });
-                    if (enemyGridX > 0 && maze[enemyGridY - 1][enemyGridX] === 0) possibleMoves.push({ x: -1, y: 0 });
-                    if (enemyGridX < maze[0].length - 1 && maze[enemyGridY][enemyGridX + 1] === 0) possibleMoves.push({ x: 1, y: 0 });
+                    enemy.moveTimer += 1;
+                    if (enemy.moveTimer < 30) continue;
+                    enemy.moveTimer = 0;
 
-                    if (possibleMoves.length > 0) {
-                        const move = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
-                        targetGridX = enemyGridX + move.x;
-                        targetGridY = enemyGridY + move.y;
+                    const enemyGridX = Math.floor(enemy.x / cellSize);
+                    const enemyGridY = Math.floor(enemy.y / cellSize);
+
+                    let targetGridX = enemyGridX;
+                    let targetGridY = enemyGridY;
+
+                    if (canSeePlayer(enemy)) {
+                        const playerGridX = Math.floor(player.x / cellSize);
+                        const playerGridY = Math.floor(player.y / cellSize);
+
+                        const deltaX = playerGridX - enemyGridX;
+                        const deltaY = playerGridY - enemyGridY;
+
+                        let moveX = 0;
+                        let moveY = 0;
+
+                        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                            moveX = Math.sign(deltaX);
+                        } else if (deltaY !== 0) {
+                            moveY = Math.sign(deltaY);
+                        }
+
+                        targetGridX = enemyGridX + moveX;
+                        targetGridY = enemyGridY + moveY;
+                    } else if (Math.random() < 0.1) {
+                        const possibleMoves = [];
+                        if (enemyGridY > 0 && maze[enemyGridY - 1][enemyGridX] === 0) possibleMoves.push({ x: 0, y: -1 });
+                        if (enemyGridY < maze.length - 1 && maze[enemyGridY + 1][enemyGridX] === 0) possibleMoves.push({ x: 0, y: 1 });
+                        if (enemyGridX > 0 && maze[enemyGridY][enemyGridX - 1] === 0) possibleMoves.push({ x: -1, y: 0 });
+                        if (enemyGridX < maze[0].length - 1 && maze[enemyGridY][enemyGridX + 1] === 0) possibleMoves.push({ x: 1, y: 0 });
+
+                        if (possibleMoves.length > 0) {
+                            const move = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+                            targetGridX = enemyGridX + move.x;
+                            targetGridY = enemyGridY + move.y;
+                        }
                     }
-                }
 
-                if (targetGridY >= 0 && targetGridY < maze.length && targetGridX >= 0 && targetGridX < maze[0].length && maze[targetGridY][targetGridX] !== 1) {
-                    enemy.moving = true;
-                    enemy.targetX = targetGridX * cellSize;
-                    enemy.targetY = targetGridY * cellSize;
-                    animateMove(enemy, enemy.targetX, enemy.targetY, () => {
-                        enemy.moving = false;
-                        enemy.targetX = null;
-                        enemy.targetY = null;
-                    });
+                    if (targetGridY >= 0 && targetGridY < maze.length && targetGridX >= 0 && targetGridX < maze[0].length && maze[targetGridY][targetGridX] !== 1) {
+                        enemy.moving = true;
+                        enemy.targetX = targetGridX * cellSize;
+                        enemy.targetY = targetGridY * cellSize;
+                        animateMove(enemy, enemy.targetX, enemy.targetY, () => {
+                            enemy.moving = false;
+                            enemy.targetX = null;
+                            enemy.targetY = null;
+                        });
+                    }
                 }
             }
         }
@@ -330,6 +559,29 @@
                 if (e2 < dx) { err += dx; y += sy; }
             }
             return true;
+        }
+
+        function isEnemyVisible(enemy) {
+            const distance = Math.sqrt(
+                Math.pow((player.x + player.size / 2 - enemy.x - enemy.size / 2), 2) +
+                Math.pow((player.y + player.size / 2 - enemy.y - enemy.size / 2), 2)
+            );
+            return distance < visionRadius;
+        }
+
+        function checkCollisions() {
+            if (!player) return;
+
+            for (const enemy of enemies) {
+                if (player.x < enemy.x + enemy.size &&
+                    player.x + player.size > enemy.x &&
+                    player.y < enemy.y + enemy.size &&
+                    player.y + player.size > enemy.y) {
+                    gameOver();
+                    return true;
+                }
+            }
+            return false;
         }
 
         function drawMaze() {
@@ -372,8 +624,10 @@
 
         function drawEnemies() {
             for (const enemy of enemies) {
-                ctx.fillStyle = 'red';
-                ctx.fillRect(enemy.x, enemy.y, enemy.size, enemy.size);
+                if (isEnemyVisible(enemy)) {
+                    ctx.fillStyle = 'red';
+                    ctx.fillRect(enemy.x, enemy.y, enemy.size, enemy.size);
+                }
             }
         }
 
@@ -385,32 +639,38 @@
             drawEnemies();
             drawPlayer();
 
+            if (checkCollisions()) {
+                return;
+            }
+
             const playerGridX = Math.floor(player.x / cellSize);
             const playerGridY = Math.floor(player.y / cellSize);
-            if (maze[playerGridY] && maze[playerGridY][playerGridX] === 2) {
+            if (playerGridY >= 0 && playerGridY < maze.length && playerGridX >= 0 && playerGridX < maze[0].length && maze[playerGridY][playerGridX] === 2) {
                 gameWon();
                 return;
             }
 
             updateEnemies();
 
-            animationFrameId = requestAnimationFrame(gameLoop); // Atribui o ID ao iniciar o loop
+            animationFrameId = requestAnimationFrame(gameLoop);
         }
 
         function gameOver() {
             gameStarted = false;
-            if (animationFrameId) cancelAnimationFrame(animationFrameId); // Cancela a animação
-            alert('Game Over!');
-            startScreen.style.display = 'flex';
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
             controls.style.display = 'none';
+            gameOverScreen.style.display = 'flex';
         }
 
         function gameWon() {
             gameStarted = false;
-            if (animationFrameId) cancelAnimationFrame(animationFrameId); // Cancela a animação
-            alert('Você venceu!');
-            startScreen.style.display = 'flex';
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
             controls.style.display = 'none';
+            gameWonScreen.style.display = 'flex';
         }
     </script>
 </body>
