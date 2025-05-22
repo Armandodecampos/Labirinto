@@ -24,6 +24,7 @@
             flex-direction: column;
             flex-grow: 1; /* Permite que o contêiner do jogo preencha o espaço disponível */
             position: relative; /* Necessário para posicionar o startScreen e gameOverScreen corretamente */
+            overflow: hidden; /* Garante que nada transborde do container */
         }
 
         #gameCanvas {
@@ -91,10 +92,6 @@
         /* Controles - Conteiner principal que engloba todos os botões */
         #controls {
             display: flex; /* Permite sub-contêineres lado a lado */
-            position:fixed;
-            left:0;
-            right:0;
-            bottom:0px;
             justify-content: space-between; /* Espaça os grupos de botões */
             align-items: center; /* Alinha os botões verticalmente ao centro */
             padding: 1.5vh 2vw; /* Adiciona algum preenchimento nas laterais e acima, usando vh e vw */
@@ -102,9 +99,8 @@
             flex-shrink: 0; /* Garante que os controles não encolham */
             z-index: 15; /* Z-index para os controles, entre o canvas e as telas de fim de jogo */
             box-sizing: border-box; /* Inclui padding e borda no tamanho total */
-            padding-bottom:30px;
-
-
+            padding-bottom: 30px; /* Mantido para iOS safe area */
+            /* Removido position: fixed para que os controles sejam parte do fluxo flex do body */
         }
 
         /* Grupo de botões de movimento em cruz */
