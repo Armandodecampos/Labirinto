@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>Jogo do Labirinto</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, viewport-fit=cover">
     <style>
         body {
             margin: 0;
@@ -98,6 +98,9 @@
             flex-shrink: 0; /* Garante que os controles não encolham */
             z-index: 15; /* Z-index para os controles, entre o canvas e as telas de fim de jogo */
             box-sizing: border-box; /* Inclui padding e borda no tamanho total */
+
+            /* NOVO: Adiciona padding na parte inferior para evitar a barra de navegação */
+            padding-bottom: calc(1.5vh + env(safe-area-inset-bottom));
         }
 
         /* Grupo de botões de movimento em cruz */
@@ -106,11 +109,10 @@
             grid-template-columns: repeat(3, 1fr); /* 3 colunas, cada uma ocupando uma fração do espaço disponível */
             grid-template-rows: repeat(3, 1fr); /* 3 linhas, cada uma ocupando uma fração do espaço disponível */
             gap: 1.5vmin; /* Espaçamento entre os botões, usa vmin para ser relativo à menor dimensão da viewport */
-            /* Limita o tamanho máximo dos controles direcionais */
-            max-width: 150px; /* Tamanho máximo em pixels para desktop */
-            max-height: 150px; /* Tamanho máximo em pixels para desktop */
-            width: 25vmin; /* Tamanho responsivo baseado na menor dimensão da viewport */
-            height: 25vmin; /* Mantém proporção */
+            width: 35vmin; /* Aumentado de 25vmin para 35vmin */
+            height: 35vmin; /* Aumentado de 25vmin para 35vmin */
+            max-width: 180px; /* Levemente aumentado o limite máximo */
+            max-height: 180px; /* Levemente aumentado o limite máximo */
             aspect-ratio: 1 / 1; /* Mantém a proporção de 1:1 (quadrado) */
             margin-left: 1vw; /* Espaço da borda esquerda, relativo à largura da viewport */
             flex-shrink: 0; /* Impede que encolha */
@@ -119,7 +121,7 @@
         #directional-controls button {
             width: 100%; /* Ocupa 100% da célula do grid */
             height: 100%; /* Ocupa 100% da célula do grid */
-            font-size: 5vw; /* Aumenta o tamanho da seta, relativo à largura da viewport */
+            font-size: 6vw; /* Aumentado o tamanho da seta, relativo à largura da viewport */
             background-color: #333;
             color: white;
             border: 1px solid #555;
@@ -155,12 +157,11 @@
 
         /* Botão de ataque */
         #attack-button {
-            /* Tamanho do botão baseado na menor dimensão da viewport, com limite máximo */
-            width: 15vmin;
-            height: 15vmin;
-            max-width: 100px; /* Limite máximo em pixels para desktop */
-            max-height: 100px; /* Limite máximo em pixels para desktop */
-            font-size: 3.5vw; /* Tamanho da fonte, relativo à largura da viewport */
+            width: 20vmin; /* Aumentado de 15vmin para 20vmin */
+            height: 20vmin; /* Aumentado de 15vmin para 20vmin */
+            max-width: 130px; /* Levemente aumentado o limite máximo */
+            max-height: 130px; /* Levemente aumentado o limite máximo */
+            font-size: 4.5vw; /* Aumentado o tamanho da fonte */
             background-color: #dc3545;
             color: white;
             border: 1px solid #bb2d3b;
@@ -188,34 +189,34 @@
         @media (orientation: landscape) {
             /* Em modo paisagem, ajuste o tamanho dos controles para não serem muito grandes */
             #directional-controls {
-                width: 20vmin;
-                height: 20vmin;
+                width: 28vmin; /* Ajustado para paisagem */
+                height: 28vmin; /* Ajustado para paisagem */
             }
             #attack-button {
-                width: 12vmin;
-                height: 12vmin;
+                width: 16vmin; /* Ajustado para paisagem */
+                height: 16vmin; /* Ajustado para paisagem */
             }
             #directional-controls button {
-                font-size: 3.5vw;
+                font-size: 5vw; /* Ajustado para paisagem */
             }
             #attack-button {
-                font-size: 2.5vw;
+                font-size: 3.5vw; /* Ajustado para paisagem */
             }
         }
 
         @media (min-width: 768px) {
             /* Para tablets e desktops, defina tamanhos fixos para os botões */
             #directional-controls {
-                width: 150px;
-                height: 150px;
+                width: 180px; /* Mantém o limite máximo para desktop */
+                height: 180px; /* Mantém o limite máximo para desktop */
             }
             #directional-controls button {
-                font-size: 40px;
+                font-size: 45px; /* Aumentado para desktop */
             }
             #attack-button {
-                width: 100px;
-                height: 100px;
-                font-size: 25px;
+                width: 130px; /* Mantém o limite máximo para desktop */
+                height: 130px; /* Mantém o limite máximo para desktop */
+                font-size: 30px; /* Aumentado para desktop */
             }
         }
     </style>
@@ -367,7 +368,8 @@
                     const newX = x + dx;
 
                     // Verifica se a nova célula está dentro dos limites e é uma parede
-                    if (newY > 0 && newY < height - 1 && newX > 0 && newX < width - 1 && grid[newY][newX] === 1) {
+                    // e se o "caminho" entre as células também é uma parede para ser quebrado
+                    if (newY > 0 && newY < height - 1 && newX > 0 && newX < width - 1 && grid[newY][newX] === 1 && grid[y + dy / 2][x + dx / 2] === 1) {
                         grid[newY][newX] = 0; // Transforma a célula em caminho
                         grid[y + dy / 2][x + dx / 2] = 0; // Transforma a "parede" entre as células em caminho
 
@@ -381,14 +383,17 @@
                 }
             }
 
+            // Garante que a saída esteja sempre no final do labirinto
             let exitY = height - 2;
             let exitX = width - 2;
 
+            // Se a célula de saída padrão for uma parede, tente encontrar outra célula de caminho próxima ao canto
             if (grid[exitY][exitX] === 1 || grid[exitY][exitX] === undefined) {
                 let foundExit = false;
                 for (let i = exitCandidateCells.length - 1; i >= 0; i--) {
                     const [candY, candX] = exitCandidateCells[i];
-                    if (grid[candY][candX] === 0) {
+                    // Prefere células mais próximas do canto inferior direito
+                    if (grid[candY][candX] === 0 && (candY >= height - 3 || candX >= width - 3)) {
                         exitY = candY;
                         exitX = candX;
                         foundExit = true;
@@ -396,6 +401,7 @@
                     }
                 }
 
+                // Último recurso: encontra qualquer caminho disponível no final do labirinto
                 if (!foundExit) {
                     for (let r = height - 1; r >= 0; r--) {
                         for (let c = width - 1; c >= 0; c--) {
@@ -410,7 +416,6 @@
                     }
                 }
             }
-
             grid[exitY][exitX] = 2; // Define a saída como 2
             return grid;
         }
@@ -424,11 +429,13 @@
         }
 
         function createPlayer() {
+            // Tenta posicionar o player na primeira célula livre da primeira coluna
             for (let y = 0; y < maze.length; y++) {
                 if (maze[y][0] === 0) {
                     return { x: 0 * cellSize, y: y * cellSize, size: cellSize * 0.8, speed: 5, isAttacking: false, attackRange: cellSize };
                 }
             }
+            // Fallback: se não encontrar na primeira coluna, posiciona em (1,1)
             return { x: 1 * cellSize, y: 1 * cellSize, size: cellSize * 0.8, speed: 5, isAttacking: false, attackRange: cellSize };
         }
 
@@ -441,7 +448,8 @@
                 const randomY = Math.floor(Math.random() * maze.length);
                 const randomX = Math.floor(Math.random() * maze[0].length);
 
-                if (maze[randomY][randomX] === 0 && (Math.abs(randomX - player.x / cellSize) > 5 || Math.abs(randomY - player.y / cellSize) > 5)) {
+                // Garante que o inimigo não spawne muito perto do jogador ou em uma parede ou saída
+                if (maze[randomY][randomX] === 0 && maze[randomY][randomX] !== 2 && (Math.abs(randomX - player.x / cellSize) > 5 || Math.abs(randomY - player.y / cellSize) > 5)) {
                     enemiesArray.push({ x: randomX * cellSize, y: randomY * cellSize, size: cellSize * 0.6, speed: 3, moving: false, targetX: null, targetY: null, moveTimer: 0 });
                     placedEnemies++;
                 }
@@ -563,7 +571,7 @@
                     }
 
                     enemy.moveTimer += 1;
-                    if (enemy.moveTimer < 30) continue;
+                    if (enemy.moveTimer < 30) continue; // Inimigo espera um pouco antes de se mover novamente
                     enemy.moveTimer = 0;
 
                     const enemyGridX = Math.floor(enemy.x / cellSize);
@@ -582,15 +590,48 @@
                         let moveX = 0;
                         let moveY = 0;
 
+                        // Tenta mover na direção que reduz a maior diferença (X ou Y)
                         if (Math.abs(deltaX) > Math.abs(deltaY)) {
                             moveX = Math.sign(deltaX);
-                        } else if (deltaY !== 0) {
+                        } else if (deltaY !== 0) { // Se as diferenças forem iguais, prefere Y ou se Y é a maior
                             moveY = Math.sign(deltaY);
+                        }
+                        // Se só houver movimento em uma direção (ex: deltaX é 0, mas deltaY não), tenta mover em Y
+                        if (moveX === 0 && moveY === 0 && (deltaX !== 0 || deltaY !== 0)) {
+                            if (deltaX !== 0) moveX = Math.sign(deltaX);
+                            else if (deltaY !== 0) moveY = Math.sign(deltaY);
                         }
 
                         targetGridX = enemyGridX + moveX;
                         targetGridY = enemyGridY + moveY;
-                    } else if (Math.random() < 0.1) {
+
+                        // Se o caminho direto estiver bloqueado por uma parede, tenta desviar
+                        if (maze[targetGridY] && maze[targetGridY][targetGridX] === 1) {
+                            // Tenta mover na direção alternativa
+                            if (moveX !== 0 && maze[enemyGridY + Math.sign(deltaY)] && maze[enemyGridY + Math.sign(deltaY)][enemyGridX] !== 1) {
+                                targetGridX = enemyGridX;
+                                targetGridY = enemyGridY + Math.sign(deltaY);
+                            } else if (moveY !== 0 && maze[enemyGridY] && maze[enemyGridY][enemyGridX + Math.sign(deltaX)] !== 1) {
+                                targetGridX = enemyGridX + Math.sign(deltaX);
+                                targetGridY = enemyGridY;
+                            } else {
+                                // Se ainda assim estiver bloqueado, tenta um movimento aleatório (com menos chance)
+                                targetGridX = enemyGridX;
+                                targetGridY = enemyGridY; // Reseta para a posição atual
+                                const possibleMoves = [];
+                                if (enemyGridY > 0 && maze[enemyGridY - 1][enemyGridX] === 0) possibleMoves.push({ x: 0, y: -1 });
+                                if (enemyGridY < maze.length - 1 && maze[enemyGridY + 1][enemyGridX] === 0) possibleMoves.push({ x: 0, y: 1 });
+                                if (enemyGridX > 0 && maze[enemyGridY][enemyGridX - 1] === 0) possibleMoves.push({ x: -1, y: 0 });
+                                if (enemyGridX < maze[0].length - 1 && maze[enemyGridY][enemyGridX + 1] === 0) possibleMoves.push({ x: 1, y: 0 });
+
+                                if (possibleMoves.length > 0) {
+                                    const move = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+                                    targetGridX = enemyGridX + move.x;
+                                    targetGridY = enemyGridY + move.y;
+                                }
+                            }
+                        }
+                    } else if (Math.random() < 0.1) { // Movimento aleatório se não vê o player (10% de chance)
                         const possibleMoves = [];
                         if (enemyGridY > 0 && maze[enemyGridY - 1][enemyGridX] === 0) possibleMoves.push({ x: 0, y: -1 });
                         if (enemyGridY < maze.length - 1 && maze[enemyGridY + 1][enemyGridX] === 0) possibleMoves.push({ x: 0, y: 1 });
@@ -604,7 +645,8 @@
                         }
                     }
 
-                    if (targetGridY >= 0 && targetGridY < maze.length && targetGridX >= 0 && targetGridX < maze[0].length && maze[targetGridY][targetGridX] !== 1) {
+                    // Somente move se a célula alvo for um caminho
+                    if (targetGridY >= 0 && targetGridY < maze.length && targetGridX >= 0 && targetGridX < maze[0].length && maze[targetGridY][targetGridX] === 0) {
                         enemy.moving = true;
                         enemy.targetX = targetGridX * cellSize;
                         enemy.targetY = targetGridY * cellSize;
@@ -624,26 +666,40 @@
             const playerGridX = Math.floor(player.x / cellSize);
             const playerGridY = Math.floor(player.y / cellSize);
 
-            let x = enemyGridX;
-            let y = enemyGridY;
-            const dx = Math.abs(playerGridX - enemyGridX);
-            const dy = Math.abs(playerGridY - enemyGridY);
-            const sx = (enemyGridX < playerGridX) ? 1 : -1;
-            const sy = (enemyGridY < playerGridY) ? 1 : -1;
+            // Verifica se o player está dentro do raio de visão do inimigo
+            const dist = Math.sqrt(Math.pow(playerGridX - enemyGridX, 2) + Math.pow(playerGridY - enemyGridY, 2));
+            if (dist > (visionRadius / cellSize)) { // Compara distâncias em termos de células
+                return false;
+            }
+
+            // Algoritmo de linha de visão (Bresenham's Line Algorithm adaptado)
+            let x0 = enemyGridX;
+            let y0 = enemyGridY;
+            let x1 = playerGridX;
+            let y1 = playerGridY;
+
+            let dx = Math.abs(x1 - x0);
+            let dy = Math.abs(y1 - y0);
+            let sx = (x0 < x1) ? 1 : -1;
+            let sy = (y0 < y1) ? 1 : -1;
             let err = dx - dy;
 
-            while (x !== playerGridX || y !== playerGridY) {
-                if (x < 0 || x >= maze[0].length || y < 0 || y >= maze.length || maze[y][x] === 1) {
+            while (true) {
+                if (maze[y0][x0] === 1) { // Se encontrar uma parede no caminho
                     return false;
                 }
-                const e2 = 2 * err;
-                if (e2 > -dy) { err -= dy; x += sx; }
-                if (e2 < dx) { err += dx; y += sy; }
+                if (x0 === x1 && y0 === y1) { // Chegou ao destino sem encontrar parede
+                    break;
+                }
+                let e2 = 2 * err;
+                if (e2 > -dy) { err -= dy; x0 += sx; }
+                if (e2 < dx) { err += dx; y0 += sy; }
             }
             return true;
         }
 
         function isEnemyVisible(enemy) {
+            // Este é apenas para renderização, não para IA do inimigo
             const distance = Math.sqrt(
                 Math.pow((player.x + player.size / 2 - enemy.x - enemy.size / 2), 2) +
                 Math.pow((player.y + player.size / 2 - enemy.y - enemy.size / 2), 2)
