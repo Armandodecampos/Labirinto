@@ -3,8 +3,6 @@
 <head>
     <title>Jogo do Labirinto</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, viewport-fit=cover">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         body {
             margin: 0;
@@ -80,6 +78,12 @@
             z-index: 30;
             font-size: 5vw;
             font-weight: bold;
+        }
+
+        .end-game-screen img {
+            max-width: 80%;
+            height: auto;
+            margin-bottom: 2vw;
         }
 
         .end-game-screen button {
@@ -164,9 +168,11 @@
 
         /* Botão de ataque */
         #attack-button {
-            width: 130px; /* Defina uma largura fixa em pixels */
-            height: 130px; /* Defina uma altura fixa em pixels, igual à largura para manter a forma circular */
-            font-size: 50px; /* Ajuste o tamanho do ícone aqui (em pixels) */
+            width: 20vmin;
+            height: 20vmin;
+            max-width: 130px;
+            max-height: 130px;
+            font-size: 4.5vw;
             background-color: #dc3545;
             color: white;
             border: 1px solid #bb2d3b;
@@ -208,16 +214,27 @@
 <body>
     <div id="gameContainer">
         <div id="startScreen">
-            <h1>Jogo do Labirinto</h1>
+            <h1>Labirinto</h1>
+            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 2vw;">
+                <img src="https://dl.dropbox.com/scl/fi/qnkpqvyk4p1jbpx6sl2ws/bau.png?rlkey=1ymyfwp7yhhr7w70k7uwk8787&st=2g7f2edw&dl=0" alt="Moeda" style="width: 8vw; height: 8vw; max-width: 60px; max-height: 60px; margin-right: 2vw;">
+                <span id="startScreenGoldAmount" style="font-size: 5vw; color: gold;">0</span>
+            </div>
             <button id="startButton">Iniciar Jogo</button>
         </div>
         <div id="gameOverScreen" class="end-game-screen">
-            Você perdeu!
+            <h1 style="color:#fff">Fim de jogo!</h1>
+            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 2vw;">
+                <img src="https://dl.dropbox.com/scl/fi/qnkpqvyk4p1jbpx6sl2ws/bau.png?rlkey=1ymyfwp7yhhr7w70k7uwk8787&st=2g7f2edw&dl=0" alt="Moeda" style="width: 8vw; height: 8vw; max-width: 60px; max-height: 60px; margin-right: 2vw;">
+                <span id="gameOverGoldAmount" style="font-size: 5vw; color: gold;">0</span>
+            </div>
             <button id="restartButton">Tentar Novamente</button>
         </div>
         <div id="gameWonScreen" class="end-game-screen">
-            Você Venceu!
-            <button id="playAgainButton">Jogar Novamente</button>
+            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 2vw;">
+                <img src="https://dl.dropbox.com/scl/fi/qnkpqvyk4p1jbpx6sl2ws/bau.png?rlkey=1ymyfwp7yhhr7w70k7uwk8787&st=2g7f2edw&dl=0" alt="Moeda" style="width: 8vw; height: 8vw; max-width: 60px; max-height: 60px; margin-right: 2vw;">
+                <span id="gameWonGoldAmount" style="font-size: 5vw; color: gold;">0</span>
+            </div>
+            <button id="playAgainButton">Próxima fase</button>
         </div>
         <canvas id="gameCanvas"></canvas>
     </div>
@@ -231,9 +248,7 @@
             <button id="btn-down" onclick="movePlayer('down')">&#9660;</button>
         </div>
 
-        <button id="attack-button" onclick="attack()">
-    <i class="fas fa-hand-fist"></i> </button>
-    </button>
+        <button id="attack-button" onclick="attack()" style="font-size:80px">&#9876;</button>
     </div>
 
     <script>
@@ -247,6 +262,9 @@
         const gameWonScreen = document.getElementById('gameWonScreen');
         const playAgainButton = document.getElementById('playAgainButton');
         const gameContainer = document.getElementById('gameContainer');
+        const gameWonGoldAmountDisplay = document.getElementById('gameWonGoldAmount'); // Elemento para exibir o ouro na tela de vitória
+        const startScreenGoldAmountDisplay = document.getElementById('startScreenGoldAmount'); // Elemento para exibir o ouro na tela inicial
+        const gameOverGoldAmountDisplay = document.getElementById('gameOverGoldAmount'); // Elemento para exibir o ouro na tela de Game Over
 
         // Adicionar elemento de áudio
         const gameMusic = new Audio('https://dl.dropbox.com/scl/fi/ln6s85xx16tx6tlk94f3p/crawling-danger-303228.mp3?rlkey=jq78ikfiy3zanle8p9sl1qct9&st=b2csb5eq&dl=0');
@@ -260,10 +278,8 @@
         let cellSize;
         let visionRadius;
         let gameSpeed = 75;
-        // Removed playerMoving and playerMoveQueue as they are not needed for single-step movement
-        // let playerMoving = false;
-        // let playerMoveQueue = [];
         let animationFrameId;
+        let totalGold = 0; // Variável para acumular o ouro
 
         // Player images
         const playerImageFront = new Image();
@@ -290,15 +306,18 @@
 
         // Wall texture image
         const wallTexture = new Image();
-        // Replace with your actual wall image URL
         wallTexture.src = 'https://dl.dropbox.com/scl/fi/hhe32wffjev38dypmimhn/Gemini_Generated_Image_l2nvkkl2nvkkl2nv.png?rlkey=ergtplwxo4bfunx1zd2xh9dn4&st=oa6w2icj&dl=0'; 
+        
+        // Exit image (NOVA IMAGEM AQUI)
+        const exitImage = new Image();
+        exitImage.src = 'https://dl.dropbox.com/scl/fi/qnkpqvyk4p1jbpx6sl2ws/bau.png?rlkey=1ymyfwp7yhhr7w70k7uwk8787&st=2g7f2edw&dl=0'; // Substitua pelo URL da sua imagem de saída
 
         // Variable to store the current player direction
         let playerDirection = 'down'; // 'up', 'down', 'left', 'right'
 
         // Wait for all images to load before starting the game
         let imagesLoaded = 0;
-        const totalImages = 6; // player front, back, side, enemy, floor texture, wall texture, attack effect
+        const totalImages = 7; // player front, back, side, enemy, floor texture, wall texture, attack effect, exit image
 
         function imageLoadHandler() {
             imagesLoaded++;
@@ -323,7 +342,7 @@
         floorTexture.onload = imageLoadHandler;
         wallTexture.onload = imageLoadHandler;
         attackEffectImage.onload = imageLoadHandler;
-
+        exitImage.onload = imageLoadHandler; // Carrega a imagem da saída
 
         startButton.addEventListener('click', () => {
             // Ensure pattern is available before starting, or handle loading state
@@ -345,6 +364,8 @@
             startScreen.style.display = 'none';
             gameWonScreen.style.display = 'none';
             controls.style.display = 'flex';
+            totalGold = 0; // Reseta o ouro ao reiniciar o jogo
+            startScreenGoldAmountDisplay.textContent = totalGold; // Atualiza o ouro na tela inicial
             startGame();
             gameMusic.currentTime = 0; // Reiniciar a música
             gameMusic.play(); // Iniciar a música novamente
@@ -355,6 +376,7 @@
             startScreen.style.display = 'none';
             gameOverScreen.style.display = 'none';
             controls.style.display = 'flex';
+            // Ouro não é resetado aqui, pois é "próxima fase"
             startGame();
             gameMusic.currentTime = 0; // Reiniciar a música
             gameMusic.play(); // Iniciar a música novamente
@@ -422,7 +444,10 @@
         });
 
         // Initial call to resize elements when the page loads
-        document.addEventListener('DOMContentLoaded', resizeGameElements);
+        document.addEventListener('DOMContentLoaded', () => {
+            resizeGameElements();
+            startScreenGoldAmountDisplay.textContent = totalGold; // Exibe o ouro inicial na tela de início
+        });
 
 
         function generateMaze(width, height) {
@@ -834,8 +859,13 @@
                                 ctx.fillRect(worldX, worldY, cellSize, cellSize);
                             }
                         } else if (maze[y][x] === 2) {
-                            ctx.fillStyle = 'green'; // Exit
-                            ctx.fillRect(worldX, worldY, cellSize, cellSize);
+                            // Draw the exit image instead of a green rectangle
+                            if (exitImage.complete && exitImage.naturalHeight !== 0) {
+                                ctx.drawImage(exitImage, worldX, worldY, cellSize, cellSize);
+                            } else {
+                                ctx.fillStyle = 'green'; // Fallback if texture not loaded
+                                ctx.fillRect(worldX, worldY, cellSize, cellSize);
+                            }
                         } else {
                             // Apply floor texture
                             if (floorPattern) {
@@ -960,7 +990,9 @@
             }
             gameMusic.pause(); // Parar a música no Game Over
             controls.style.display = 'none';
+            gameOverGoldAmountDisplay.textContent = totalGold; // Exibe o ouro acumulado antes de perder
             gameOverScreen.style.display = 'flex';
+            totalGold = 0; // Reseta o ouro quando o jogo termina em Game Over
         }
 
         function gameWon() {
@@ -970,6 +1002,10 @@
             }
             gameMusic.pause(); // Parar a música quando o jogo for ganho
             controls.style.display = 'none';
+
+            const earnedGold = Math.floor(Math.random() * 10000) + 1; // Ouro entre 1 e 10.000
+            totalGold += earnedGold;
+            gameWonGoldAmountDisplay.textContent = totalGold; // Atualiza a exibição do ouro na tela de vitória
             gameWonScreen.style.display = 'flex';
         }
     </script>
