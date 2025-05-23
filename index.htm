@@ -66,7 +66,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background-color: rgba(0, 0, 0, 0.8);
+            background-color: #000;
             color: white;
             padding: 3vw;
             border-radius: 5px;
@@ -160,6 +160,7 @@
             aspect-ratio: 1 / 1;
             margin-left: 1vw;
             flex-shrink: 0;
+            
         }
 
         #directional-controls button {
@@ -180,6 +181,8 @@
             -moz-user-select: none;
             -ms-user-select: none;
             user-select: none;
+            -webkit-tap-highlight-color: transparent; /* Para navegadores WebKit (iOS, Android Chrome) */
+    outline: none; /* Remove o outline em navegadores desktop */
         }
 
         /* Posicionamento dos botões dentro do grid (formato de cruz) */
@@ -221,6 +224,8 @@
             -moz-user-select: none;
             -ms-user-select: none;
             user-select: none;
+            -webkit-tap-highlight-color: transparent; /* Para navegadores WebKit (iOS, Android Chrome) */
+    outline: none; /* Remove o outline em navegadores desktop */
         }
 
         #attack-button:active {
@@ -661,43 +666,43 @@
                 player.isAttacking = false;
             }, 300);
 
-            const playerGridX = Math.floor(player.x / cellSize);
-            const playerGridY = Math.floor(player.y / cellSize);
-
-            let attackTargetGridX = playerGridX;
-            let attackTargetGridY = playerGridY;
+            // Define uma pequena área de ataque em vez de apenas uma célula
+            const attackDetectionRadius = cellSize * 1.2; // Aumente este valor para uma área maior
+            
+            // Calcula a posição central do ataque
+            let attackCenterX = player.x + player.size / 2;
+            let attackCenterY = player.y + player.size / 2;
 
             switch (playerDirection) {
                 case 'up':
-                    attackTargetGridY--;
+                    attackCenterY -= cellSize;
                     break;
                 case 'down':
-                    attackTargetGridY++;
+                    attackCenterY += cellSize;
                     break;
                 case 'left':
-                    attackTargetGridX--;
+                    attackCenterX -= cellSize;
                     break;
                 case 'right':
-                    attackTargetGridX++;
+                    attackCenterX += cellSize;
                     break;
             }
 
-            if (attackTargetGridY >= 0 && attackTargetGridY < maze.length &&
-                attackTargetGridX >= 0 && attackTargetGridX < maze[0].length) {
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+                // Calcula a distância entre o centro do ataque e o centro do inimigo
+                const distance = Math.sqrt(
+                    Math.pow(attackCenterX - (enemy.x + enemy.size / 2), 2) +
+                    Math.pow(attackCenterY - (enemy.y + enemy.size / 2), 2)
+                );
 
-                for (let i = enemies.length - 1; i >= 0; i--) {
-                    const enemy = enemies[i];
-                    const enemyGridX = Math.floor(enemy.x / cellSize);
-                    const enemyGridY = Math.floor(enemy.y / cellSize);
-
-                    if (enemyGridX === attackTargetGridX && enemyGridY === attackTargetGridY) {
-                        enemies.splice(i, 1);
-                        break;
-                    }
+                // Se o inimigo estiver dentro do raio de detecção, ele é atingido
+                if (distance < attackDetectionRadius) {
+                    enemies.splice(i, 1);
+                    break; // Remove apenas um inimigo por ataque
                 }
             }
         }
-
         document.addEventListener('keydown', (event) => {
             if (!gameStarted) return;
             switch (event.key) {
