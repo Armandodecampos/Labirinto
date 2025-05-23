@@ -257,6 +257,70 @@
                 height: 210px;
             }
         }
+
+        /* Estilos para o botão de configurações */
+        #settingsButton {
+            position: fixed;
+            top: 0.5vmin; /* Mais próximo do canto */
+            left: 0.5vmin; /* Mais próximo do canto */
+            background: none; /* Removido */
+            border: none; /* Removido */
+            padding: 0; /* Removido */
+            font-size: 5vmin; /* Ajustado para ser apenas o ícone */
+            color: white; /* Cor do ícone */
+            cursor: pointer;
+            z-index: 50; /* Garante que fique acima de outros elementos */
+            display: none; /* Escondido inicialmente, aparece quando o jogo inicia */
+        }
+        /* Efeito hover para o ícone, se desejar */
+        #settingsButton:hover {
+            color: #ccc; /* Clareia um pouco no hover */
+        }
+
+        /* Estilos para a tela de configurações */
+        #settingsScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            max-height: 100vh; /* Garante que a tela não exceda a altura da viewport */
+            background-color: rgba(0, 0, 0, 0.95);
+            color: white;
+            display: none; /* Escondido por padrão */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 60; /* Acima de tudo */
+            text-align: center;
+            padding: 5vmin; /* Padding ajustado com vmin para responsividade */
+            box-sizing: border-box;
+            overflow-y: auto; /* Adiciona scroll vertical se o conteúdo for maior que a tela */
+        }
+        #settingsScreen h2 {
+            margin-bottom: 3vmin;
+            font-size: 7vmin; /* Ajustado com vmin */
+        }
+        #settingsScreen p {
+            margin-bottom: 1.5vmin;
+            font-size: 3.5vmin; /* Texto das informações um pouco menor */
+            line-height: 1.5;
+            max-width: 90vw; /* Limita a largura do texto para melhor leitura */
+        }
+        #closeSettingsButton {
+            margin-top: 5vmin;
+            padding: 2vmin 4vmin;
+            font-size: 4vmin; /* Ajustado com vmin */
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        #closeSettingsButton:hover {
+            background-color: #0056b3;
+        }
+
     </style>
 </head>
 <body>
@@ -304,6 +368,20 @@
         <button id="attack-button" onclick="attack()" style="font-size:80px">&#9876;</button>
     </div>
 
+    <button id="settingsButton">⚙️</button>
+
+    <div id="settingsScreen">
+        <h2>Controles</h2>
+        <p><b>Movimento:</b></p>
+        <p>Teclas W / &#9650; (Cima): Move para cima</p>
+        <p>Teclas S / &#9660; (Baixo): Move para baixo</p>
+        <p>Teclas A / &#9664; (Esquerda): Move para esquerda</p>
+        <p>Teclas D / &#9654; (Direita): Move para direita</p>
+        <p><b>Ataque:</b></p>
+        <p>Teclas Espaço / Enter / &#9876; (Botão de Ataque): Ataca inimigos</p>
+        <button id="closeSettingsButton">Fechar</button>
+    </div>
+
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -321,8 +399,13 @@
         const loadingScreen = document.getElementById('loadingScreen');
         const loadingProgress = document.getElementById('loadingProgress');
 
+        // Novos elementos para configurações
+        const settingsButton = document.getElementById('settingsButton');
+        const settingsScreen = document.getElementById('settingsScreen');
+        const closeSettingsButton = document.getElementById('closeSettingsButton');
+
         // Sons do jogo
-        const gameMusic = new Audio('https://dl.dropbox.com/scl/fi/ln6s85xx16tx6tlk94f3p/crawling-danger-303228.mp3?rlkey=jq78ikfiy3zanle8p9sl1qct9&st=b2csb5eq&dl=0');
+        const gameMusic = new Audio('https://dl.dropbox.com/scl/fi/ln6s85xx16tx6tlk94f3p/crawling-danger-303228.mp3?rlkey=jq78ikfiy3zanle8p9sl1qct9&st=hq0zg4i2&dl=0');
         gameMusic.loop = true;
         gameMusic.volume = 0.5;
 
@@ -332,7 +415,7 @@
         const enemyDefeatSound = new Audio('https://dl.dropbox.com/scl/fi/wn6v60w9p37if9hi70i3h/argg.mp3?rlkey=11qyqjk1zpeum4swbwez036sd&st=wo3eeapq&dl=0');
         enemyDefeatSound.volume = 0.7;
 
-        const gameOverSound = new Audio('https://dl.dropbox.com/scl/fi/98thpjk9tziuxdnv2s91k/game-over.mp3?rlkey=xqstsgukq45sfwv5sw2aeqrv8&st=f7295y1z&dl=0');
+        const gameOverSound = new Audio('https://dl.dropbox.com/scl/fi/98thpjk9tziuxdnv2s91k/game-over.mp3?rlkey=xqstsgukq45sfwv5sw2aeqrv8&st=f7295r7q&dl=0');
         gameOverSound.volume = 0.7;
 
         const gameWonSound = new Audio('https://dl.dropbox.com/scl/fi/1uybwae0vgm91ka6smtaa/game-won.mp3?rlkey=naeqy6jtfcibr7whk47bndfy5&st=anw0i1vx&dl=0');
@@ -479,6 +562,7 @@
             gameOverScreen.style.display = 'none';
             gameWonScreen.style.display = 'none';
             controls.style.display = 'flex';
+            settingsButton.style.display = 'block'; // Mostra o botão de configurações
             startGame();
             gameMusic.play();
         });
@@ -490,6 +574,7 @@
             startScreen.style.display = 'none';
             gameWonScreen.style.display = 'none';
             controls.style.display = 'flex';
+            settingsButton.style.display = 'block'; // Mostra o botão de configurações
             totalGold = 0;
             startScreenGoldAmountDisplay.textContent = totalGold;
             startGame();
@@ -504,6 +589,7 @@
             startScreen.style.display = 'none';
             gameOverScreen.style.display = 'none';
             controls.style.display = 'flex';
+            settingsButton.style.display = 'block'; // Mostra o botão de configurações
             startGame();
             gameMusic.currentTime = 0;
             gameMusic.play();
@@ -526,6 +612,26 @@
             buttonClickSound.currentTime = 0;
             buttonClickSound.play();
         });
+
+        // Event Listeners para o botão de configurações
+        settingsButton.addEventListener('click', () => {
+            buttonClickSound.currentTime = 0;
+            buttonClickSound.play();
+            settingsScreen.style.display = 'flex';
+            cancelAnimationFrame(animationFrameId); // Pausa o loop do jogo
+            gameStarted = false; // Garante que a lógica do jogo esteja parada
+            gameMusic.pause(); // Pausa a música
+        });
+
+        closeSettingsButton.addEventListener('click', () => {
+            buttonClickSound.currentTime = 0;
+            buttonClickSound.play();
+            settingsScreen.style.display = 'none';
+            gameStarted = true; // Retoma a lógica do jogo
+            gameLoop(); // Reinicia o loop de renderização do jogo
+            gameMusic.play(); // Retoma a música
+        });
+
 
         function startGame() {
             if (animationFrameId) {
@@ -734,7 +840,9 @@
             let currentStep = 0;
 
             function animationFrame() {
-                if (!gameStarted) return;
+                // Remove a condição !gameStarted aqui para que a animação possa completar
+                // quando o jogo está "pausado" pela tela de configurações.
+                // O gameLoop principal já verifica gameStarted.
                 entity.x += stepX;
                 entity.y += stepY;
                 currentStep++;
@@ -824,7 +932,7 @@
                     movePlayer('right');
                     break;
                 case ' ':
-                case 'Enter': // Adicione esta linha para o botão Enter
+                case 'Enter': // Adicionado para a tecla Enter
                     attack();
                     break;
             }
@@ -1106,7 +1214,12 @@
         }
 
         function gameLoop() {
-            if (!gameStarted) return;
+            if (!gameStarted) {
+                // Se o jogo não estiver iniciado (ex: settings screen aberta),
+                // o requestAnimationFrame não deve ser chamado novamente,
+                // apenas quando o jogo for retomado.
+                return;
+            }
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawMaze();
@@ -1138,6 +1251,7 @@
             gameOverSound.currentTime = 0; // Reinicia o som de game over
             gameOverSound.play();
             controls.style.display = 'none';
+            settingsButton.style.display = 'none'; // Esconde o botão de configurações
             gameOverGoldAmountDisplay.textContent = totalGold;
             gameOverScreen.style.display = 'flex';
             totalGold = 0;
@@ -1152,6 +1266,7 @@
             gameWonSound.currentTime = 0; // Reinicia o som de vitória
             gameWonSound.play();
             controls.style.display = 'none';
+            settingsButton.style.display = 'none'; // Esconde o botão de configurações
 
             const earnedGold = Math.floor(Math.random() * 10000) + 1;
             totalGold += earnedGold;
