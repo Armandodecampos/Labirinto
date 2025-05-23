@@ -349,6 +349,48 @@
             line-height: 1.5;
             max-width: 90vw;
         }
+        .volume-control {
+            margin-top: 2vmin;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 80%;
+            max-width: 400px;
+        }
+        .volume-control label {
+            font-size: 3vmin;
+            margin-bottom: 1vmin;
+        }
+        .volume-control input[type="range"] {
+            width: 100%;
+            height: 10px;
+            -webkit-appearance: none;
+            background: #d3d3d3;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+            border-radius: 5px;
+        }
+        .volume-control input[type="range"]:hover {
+            opacity: 1;
+        }
+        .volume-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            background: #007bff;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        .volume-control input[type="range"]::-moz-range-thumb {
+            width: 25px;
+            height: 25px;
+            background: #007bff;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
         #closeSettingsButton {
             margin-top: 5vmin;
             padding: 2vmin 4vmin;
@@ -422,12 +464,35 @@
         <p>Teclas D / &#9654; (Direita): Move para direita</p>
         <p><b>Ataque:</b></p>
         <p>Teclas Espaço / Enter / &#9876; (Botão de Ataque): Ataca inimigos</p>
+
+        <div class="volume-control">
+            <label for="musicVolume">Volume da Música:</label>
+            <input type="range" id="musicVolume" min="0" max="1" step="0.01" value="0.5">
+        </div>
+        <div class="volume-control">
+            <label for="sfxVolume">Volume dos Efeitos Sonoros:</label>
+            <input type="range" id="sfxVolume" min="0" max="1" step="0.01" value="0.7">
+        </div>
+
         <button id="closeSettingsButton">Fechar</button>
     </div>
 
     <script>
+        // Variáveis globais no topo para garantir acessibilidade
+        let gameStarted = false;
+        let maze;
+        let player;
+        let enemies = [];
+        let cellSize;
+        let visionRadius;
+        let gameSpeed = 75;
+        let animationFrameId;
+        let totalGold = 0; // Inicializa totalGold
+        let isPlayerAnimationInProgress = false;
+
+        // Elementos DOM - Declarados no topo para garantir que estejam disponíveis
         const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d'); // 'ctx' agora é declarado antes de ser usado
         const startScreen = document.getElementById('startScreen');
         const startButton = document.getElementById('startButton');
         const controls = document.getElementById('controls');
@@ -448,15 +513,19 @@
         const settingsScreen = document.getElementById('settingsScreen');
         const closeSettingsButton = document.getElementById('closeSettingsButton');
 
+        // Controles de volume - Declarados no topo para garantir que estejam disponíveis
+        const musicVolumeSlider = document.getElementById('musicVolume');
+        const sfxVolumeSlider = document.getElementById('sfxVolume');
+
         // Sons do jogo
         const gameMusic = new Audio('https://dl.dropbox.com/scl/fi/ln6s85xx16tx6tlk94f3p/crawling-danger-303228.mp3?rlkey=jq78ikfiy3zanle8p9sl1qct9&st=hq0zg4i2&dl=0');
         gameMusic.loop = true;
-        gameMusic.volume = 0.5;
+        gameMusic.volume = 0.5; // Volume inicial da música
 
         const attackSound = new Audio('https://dl.dropbox.com/scl/fi/pa6u280vcydsvex7mo0e0/hit.mp3?rlkey=u6e9agse4y3q5o3saxbtsxvow&st=a0d2ipds&dl=0');
-        attackSound.volume = 0.7;
+        attackSound.volume = 0.7; // Volume inicial dos efeitos sonoros
 
-        const enemyDefeatSound = new Audio('https://dl.dropbox.com/scl/fi/n3x8qo2o2ox9adum9mp3j/samurai-slash-6845.mp3?rlkey=un3cqyj1u6c0r3zkzzv6akhyk&st=1dndaf12&dl=0');
+        const enemyDefeatSound = new Audio('https://dl.dropbox.com/scl/fi/n3x8qo2o2ox9adum9mp3j/samurai-slash-6845.mp3?rlkey=un3cqyj1u6c0r3zkzzv6akhyk&st=1dnd12&dl=0');
         enemyDefeatSound.volume = 0.7;
 
         const gameOverSound = new Audio('https://dl.dropbox.com/scl/fi/98thpjk9tziuxdnv2s91k/game-over.mp3?rlkey=xqstsgukq45sfwv5sw2aeqrv8&st=f7295r7q&dl=0');
@@ -468,15 +537,8 @@
         const buttonClickSound = new Audio('https://dl.dropbox.com/scl/fi/cytn4gjiinxr3bsfuul0l/passos.mp3?rlkey=p51wwaavfcfs2p39y0qc4zvvp&st=65aoppn8&dl=0');
         buttonClickSound.volume = 0.5;
 
-        let gameStarted = false;
-        let maze;
-        let player;
-        let enemies = [];
-        let cellSize;
-        let visionRadius;
-        let gameSpeed = 75;
-        let animationFrameId;
-        let totalGold = 0; // Inicializa totalGold
+        // Array de todos os sons que serão controlados pelo slider de SFX
+        const sfxSounds = [attackSound, enemyDefeatSound, gameOverSound, gameWonSound, buttonClickSound];
 
         // Image objects - **VERIFIQUE SUAS URLs AQUI!**
         const playerImageFront = new Image();
@@ -490,14 +552,13 @@
         const attackEffectImage = new Image();
         attackEffectImage.src = 'https://dl.dropbox.com/scl/fi/wsfuzim41kzcdda33g9cb/Pngtree-glow-light-effect-orange-sparkling_19277829.png?rlkey=6n6oofd62ot29w4d5pdchkbm4&st=n9kgh9nv&dl=0';
         const floorTexture = new Image();
-        floorTexture.src = 'https://dl.dropbox.com/scl/fi/k1iy1g81iqc6rkevawqm7/Gemini_Generated_Image_yblibxyblibxybli.png?rlkey=2pqns5u6xomuw1v1wotjghmy0&st=2wv28s3s&dl=0';
+        floorTexture.src = 'https://dl.dropbox.com/scl/fi/k1iy1g81iqc6rkevawqm7/Gemini_Generated_Image_yblibxyblibxybli.png?rlkey=2pqns5u6xomuw1v1wotjghmy0&st=3wksrb0i&dl=0';
         const wallTexture = new Image();
         wallTexture.src = 'https://dl.dropbox.com/scl/fi/hhe32wffjev38dypmimhn/Gemini_Generated_Image_l2nvkkl2nvkkl2nv.png?rlkey=ergtplwxo4bfunx1zd2xh9dn4&st=oa6w2icj&dl=0';
         const exitImage = new Image();
         exitImage.src = 'https://dl.dropbox.com/scl/fi/qnkpqvyk4p1jbpx6sl2ws/bau.png?rlkey=1ymyfwp7yhhr7w70k7uwk8787&st=2g7f2edw&dl=0';
         const mascotImage = new Image(); // Mantém a URL do mascote atualizada
         mascotImage.src = 'https://www.dropbox.com/scl/fi/oj14ct0ei359u2xvjnc3q/Guaxinim-pirata-frente.png?rlkey=05dn1b8k0lf090n1a1pty5vsn&raw=1';
-
 
         let floorPattern;
         let playerDirection = 'down';
@@ -559,6 +620,7 @@
 
         Promise.all(assetPromises)
             .then(() => {
+                // ctx já está definido aqui
                 if (floorTexture.complete && floorTexture.naturalHeight !== 0) {
                     floorPattern = ctx.createPattern(floorTexture, 'repeat');
                 } else {
@@ -580,21 +642,6 @@
                 console.error('Erro ao carregar os assets:', error);
                 loadingProgress.textContent = 'Erro de carregamento. Verifique o console.';
             });
-
-        // Removido o bloco de registro do Service Worker para evitar o erro de protocolo.
-        /*
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(registration => {
-                        console.log('Service Worker registered with scope:', registration.scope);
-                    })
-                    .catch(error => {
-                        console.error('Service Worker registration failed:', error);
-                    });
-            });
-        }
-        */
 
         startButton.addEventListener('click', () => {
             if (startButton.disabled) return;
@@ -658,6 +705,9 @@
             buttonClickSound.currentTime = 0;
             buttonClickSound.play();
             settingsScreen.style.display = 'flex';
+            // Atualiza os sliders com os volumes atuais
+            musicVolumeSlider.value = gameMusic.volume;
+            sfxVolumeSlider.value = sfxSounds[0].volume; // Assume que todos os SFX têm o mesmo volume
         });
 
         backToStartButton.addEventListener('click', () => {
@@ -683,6 +733,18 @@
                 gameLoop();
                 gameMusic.play();
             }
+        });
+
+        // Event listeners para os sliders de volume
+        musicVolumeSlider.addEventListener('input', (event) => {
+            gameMusic.volume = parseFloat(event.target.value);
+        });
+
+        sfxVolumeSlider.addEventListener('input', (event) => {
+            const newVolume = parseFloat(event.target.value);
+            sfxSounds.forEach(sound => {
+                sound.volume = newVolume;
+            });
         });
 
         function startGame() {
@@ -839,8 +901,6 @@
             }
             return enemiesArray;
         }
-
-        let isPlayerAnimationInProgress = false;
 
         function movePlayer(direction) {
             if (!gameStarted || isPlayerAnimationInProgress) return;
@@ -1156,15 +1216,17 @@
                     const distanceToPlayer = Math.sqrt(Math.pow((player.x + player.size / 2 - worldX - cellSize / 2), 2) + Math.pow((player.y + player.size / 2 - worldY - cellSize / 2), 2));
 
                     if (distanceToPlayer < visionRadius) {
+                        // Desenha o chão
                         if (floorPattern) {
                             ctx.fillStyle = floorPattern;
                             ctx.fillRect(worldX, worldY, cellSize, cellSize);
                         } else {
-                            ctx.fillStyle = 'white';
+                            ctx.fillStyle = 'white'; // Fallback color if pattern fails
                             ctx.fillRect(worldX, worldY, cellSize, cellSize);
                         }
 
                         if (maze[y][x] === 1) {
+                            // Desenha os muros sem sombra
                             if (wallTexture.complete && wallTexture.naturalHeight !== 0) {
                                 ctx.drawImage(wallTexture, worldX, worldY, cellSize, cellSize);
                             } else {
@@ -1172,6 +1234,7 @@
                                 ctx.fillRect(worldX, worldY, cellSize, cellSize);
                             }
                         } else if (maze[y][x] === 2) {
+                            // Desenha a saída (baú)
                             if (exitImage.complete && exitImage.naturalHeight !== 0) {
                                 ctx.drawImage(exitImage, worldX, worldY, cellSize, cellSize);
                             } else {
