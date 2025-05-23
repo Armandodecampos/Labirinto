@@ -10,7 +10,7 @@
             background-color: #000;
             display: flex;
             flex-direction: column;
-            height: 70%;
+            height:70vh;
             width: 100vw;
             -webkit-user-select: none;
             -moz-user-select: none;
@@ -20,6 +20,7 @@
 
         #gameContainer {
             display: flex;
+            height: 60%;
             flex-direction: column;
             flex-grow: 1;
             position: relative;
@@ -97,7 +98,7 @@
             bottom: 0; /* Aligns to the bottom */
             left: 0; /* Aligns to the left */
             right: 0; /* Aligns to the right */
-            height:30%;
+            height:30vh;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -264,6 +265,11 @@
         const playAgainButton = document.getElementById('playAgainButton');
         const gameContainer = document.getElementById('gameContainer');
 
+        // Adicionar elemento de áudio
+        const gameMusic = new Audio('https://dl.dropbox.com/scl/fi/ln6s85xx16tx6tlk94f3p/crawling-danger-303228.mp3?rlkey=jq78ikfiy3zanle8p9sl1qct9&st=gzx0f4m8&dl=0');
+        gameMusic.loop = true; // Para a música tocar em loop
+        gameMusic.volume = 0.5; // Ajuste o volume se necessário
+
         let gameStarted = false;
         let maze;
         let player;
@@ -340,6 +346,7 @@
             gameWonScreen.style.display = 'none';
             controls.style.display = 'flex';
             startGame();
+            gameMusic.play(); // Iniciar a música quando o jogo começa
         });
 
         restartButton.addEventListener('click', () => {
@@ -348,6 +355,8 @@
             gameWonScreen.style.display = 'none';
             controls.style.display = 'flex';
             startGame();
+            gameMusic.currentTime = 0; // Reiniciar a música
+            gameMusic.play(); // Iniciar a música novamente
         });
 
         playAgainButton.addEventListener('click', () => {
@@ -356,6 +365,8 @@
             gameOverScreen.style.display = 'none';
             controls.style.display = 'flex';
             startGame();
+            gameMusic.currentTime = 0; // Reiniciar a música
+            gameMusic.play(); // Iniciar a música novamente
         });
 
         function startGame() {
@@ -901,6 +912,7 @@
             if (animationFrameId) {
                 cancelAnimationFrame(animationFrameId);
             }
+            gameMusic.pause(); // Parar a música no Game Over
             controls.style.display = 'none';
             gameOverScreen.style.display = 'flex';
         }
@@ -910,6 +922,7 @@
             if (animationFrameId) {
                 cancelAnimationFrame(animationFrameId);
             }
+            gameMusic.pause(); // Parar a música quando o jogo for ganho
             controls.style.display = 'none';
             gameWonScreen.style.display = 'flex';
         }
