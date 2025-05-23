@@ -242,14 +242,14 @@
 
     <div id="controls">
         <div id="directional-controls">
-            <button id="btn-up" onmousedown="movePlayer('up')" ontouchstart="movePlayer('up')">&#9650;</button>
-            <button id="btn-left" onmousedown="movePlayer('left')" ontouchstart="movePlayer('left')">&#9664;</button>
+            <button id="btn-up" onclick="movePlayer('up')">&#9650;</button>
+            <button id="btn-left" onclick="movePlayer('left')">&#9664;</button>
             <div id="btn-center"></div>
-            <button id="btn-right" onmousedown="movePlayer('right')" ontouchstart="movePlayer('right')">&#9654;</button>
-            <button id="btn-down" onmousedown="movePlayer('down')" ontouchstart="movePlayer('down')">&#9660;</button>
+            <button id="btn-right" onclick="movePlayer('right')">&#9654;</button>
+            <button id="btn-down" onclick="movePlayer('down')">&#9660;</button>
         </div>
 
-        <button id="attack-button" onmousedown="attack()" ontouchstart="attack()">Atacar</button>
+        <button id="attack-button" onclick="attack()">Atacar</button>
     </div>
 
     <script>
@@ -276,8 +276,9 @@
         let cellSize;
         let visionRadius;
         let gameSpeed = 75;
-        let playerMoving = false;
-        let playerMoveQueue = [];
+        // Removed playerMoving and playerMoveQueue as they are not needed for single-step movement
+        // let playerMoving = false;
+        // let playerMoveQueue = [];
         let animationFrameId;
 
         // Player images
@@ -286,7 +287,7 @@
         const playerImageBack = new Image();
         playerImageBack.src = 'https://dl.dropbox.com/scl/fi/ga6l0pmdyu3bq7k8lrpje/Guaxinim-pirata-costas.png?rlkey=snacwdyl9or37z80dcqz4invt&st=ne2qmtq9&dl=0'; // Path to the player back image
         const playerImageSide = new Image();
-        playerImageSide.src = 'https://dl.dropbox.com/scl/fi/usfxquqqa8csjozrhlqgm/Guaxinim-pirata-lado-direito.png?rlkey=pzlh8a9xztn98ekxlvza8ohc1&st=c0l68pra&dl=0'; // Path to the player side image
+        playerImageSide.src = 'https://dl.dropbox.com/scl/fi/usfxquqqa8csjozrhlqgm/Guaxinim-pirata-lado-direito.png?rlkey=pzlh8a9xztn98ekxlvza8ohc1&st=c0l68pra;dl=0'; // Path to the player side image
 
         // Enemy image
         const enemyImage = new Image();
@@ -380,8 +381,9 @@
                 cancelAnimationFrame(animationFrameId);
             }
             gameStarted = true;
-            playerMoving = false;
-            playerMoveQueue = [];
+            // Removed playerMoving and playerMoveQueue reset
+            // playerMoving = false;
+            // playerMoveQueue = [];
             playerDirection = 'down'; // Reset player direction at start
 
             resizeGameElements();
@@ -538,14 +540,12 @@
             }
             return enemiesArray;
         }
+        
+        // This variable will prevent rapid clicks from queuing up multiple moves while one is animating
+        let isPlayerAnimationInProgress = false;
 
         function movePlayer(direction) {
-            if (!gameStarted) return;
-
-            if (playerMoving) {
-                playerMoveQueue.push(direction);
-                return;
-            }
+            if (!gameStarted || isPlayerAnimationInProgress) return; // Prevents new moves if one is already animating
 
             let targetX = player.x;
             let targetY = player.y;
@@ -558,33 +558,30 @@
                 case 'up':
                     nextGridY--;
                     targetY -= cellSize;
-                    playerDirection = 'up'; // Update direction
+                    playerDirection = 'up';
                     break;
                 case 'down':
                     nextGridY++;
                     targetY += cellSize;
-                    playerDirection = 'down'; // Update direction
+                    playerDirection = 'down';
                     break;
                 case 'left':
                     nextGridX--;
                     targetX -= cellSize;
-                    playerDirection = 'left'; // Update direction
+                    playerDirection = 'left';
                     break;
                 case 'right':
                     nextGridX++;
                     targetX += cellSize;
-                    playerDirection = 'right'; // Update direction
+                    playerDirection = 'right';
                     break;
             }
 
             // Verifica se a próxima célula é válida (não é uma parede) antes de permitir o movimento
             if (nextGridY >= 0 && nextGridY < maze.length && nextGridX >= 0 && nextGridX < maze[0].length && maze[nextGridY][nextGridX] !== 1) {
-                playerMoving = true;
+                isPlayerAnimationInProgress = true; // Set flag when animation starts
                 animateMove(player, targetX, targetY, () => {
-                    playerMoving = false;
-                    if (playerMoveQueue.length > 0) {
-                        movePlayer(playerMoveQueue.shift());
-                    }
+                    isPlayerAnimationInProgress = false; // Clear flag when animation completes
                 });
             }
         }
@@ -924,7 +921,7 @@
                     case 'left':
                         attackEffectX -= cellSize; // Move left one cell
                         break;
-                    case 'right':
+                        case 'right':
                         attackEffectX += cellSize; // Move right one cell
                         break;
                 }
