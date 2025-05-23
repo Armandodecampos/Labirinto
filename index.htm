@@ -823,7 +823,10 @@
                     buttonClickSound.play();
                     movePlayer('right');
                     break;
-                case ' ': attack(); break;
+                case ' ':
+                case 'Enter': // Adicione esta linha para o botão Enter
+                    attack();
+                    break;
             }
         });
 
