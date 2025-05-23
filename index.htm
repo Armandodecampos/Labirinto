@@ -326,19 +326,19 @@
         gameMusic.loop = true;
         gameMusic.volume = 0.5;
 
-        const attackSound = new Audio('https://dl.dropbox.com/scl/fi/pa6u280vcydsvex7mo0e0/hit.mp3?rlkey=u6e9agse4y3q5o3saxbtsxvow&st=mb60dx74&dl=0'); // URL de exemplo
+        const attackSound = new Audio('https://dl.dropbox.com/scl/fi/pa6u280vcydsvex7mo0e0/hit.mp3?rlkey=u6e9agse4y3q5o3saxbtsxvow&st=a0d2ipds&dl=0');
         attackSound.volume = 0.7;
 
-        const enemyDefeatSound = new Audio('https://dl.dropbox.com/scl/fi/wn6v60w9p37if9hi70i3h/argg.mp3?rlkey=11qyqjk1zpeum4swbwez036sd&st=x6ihgsht&dl=0'); // URL de exemplo
+        const enemyDefeatSound = new Audio('https://dl.dropbox.com/scl/fi/wn6v60w9p37if9hi70i3h/argg.mp3?rlkey=11qyqjk1zpeum4swbwez036sd&st=wo3eeapq&dl=0');
         enemyDefeatSound.volume = 0.7;
 
-        const gameOverSound = new Audio('https://dl.dropbox.com/scl/fi/98thpjk9tziuxdnv2s91k/game-over.mp3?rlkey=xqstsgukq45sfwv5sw2aeqrv8&st=f7295y1z&dl=0'); // URL de exemplo
+        const gameOverSound = new Audio('https://dl.dropbox.com/scl/fi/98thpjk9tziuxdnv2s91k/game-over.mp3?rlkey=xqstsgukq45sfwv5sw2aeqrv8&st=f7295y1z&dl=0');
         gameOverSound.volume = 0.7;
 
-        const gameWonSound = new Audio('https://dl.dropbox.com/scl/fi/1uybwae0vgm91ka6smtaa/game-won.mp3?rlkey=naeqy6jtfcibr7whk47bndfy5&st=anw0i1vx&dl=0'); // URL de exemplo
+        const gameWonSound = new Audio('https://dl.dropbox.com/scl/fi/1uybwae0vgm91ka6smtaa/game-won.mp3?rlkey=naeqy6jtfcibr7whk47bndfy5&st=anw0i1vx&dl=0');
         gameWonSound.volume = 0.7;
 
-        const buttonClickSound = new Audio('https://dl.dropbox.com/scl/fi/cytn4gjiinxr3bsfuul0l/passos.mp3?rlkey=p51wwaavfcfs2p39y0qc4zvvp&st=65aoppn8&dl=0'); // URL de exemplo
+        const buttonClickSound = new Audio('https://dl.dropbox.com/scl/fi/cytn4gjiinxr3bsfuul0l/passos.mp3?rlkey=p51wwaavfcfs2p39y0qc4zvvp&st=65aoppn8&dl=0');
         buttonClickSound.volume = 0.5;
 
         let gameStarted = false;
@@ -351,13 +351,14 @@
         let animationFrameId;
         let totalGold = 0;
 
-        // Image objects
+        // Image objects - **VERIFIQUE SUAS URLs AQUI!**
         const playerImageFront = new Image();
-        playerImageFront.src = 'https://dl.dropbox.com/scl/fi/oj14ct0ei359u2xvjnc3q/Guaxinim-pirata-frente.png?rlkey=05dn1b8k0lf090n1a1pty5vsn&st=5a7dzxfi&dl=0';
+        playerImageFront.src = 'https://dl.dropbox.com/scl/fi/oj14ct0ei359u2xvjnc3q/Guaxinim-pirata-frente.png?rlkey=05dn1b8k0lf090n1a1pty5vsn&st=5a7dzxfj&dl=0';
         const playerImageBack = new Image();
         playerImageBack.src = 'https://dl.dropbox.com/scl/fi/ga6l0pmdyu3bq7k8lrpje/Guaxinim-pirata-costas.png?rlkey=snacwdyl9or37z80dcqz4invt&st=ne2qmtq9&dl=0';
         const playerImageSide = new Image();
-        playerImageSide.src = 'https://dl.dropbox.com/scl/fi/usfxquqqa8csjozrhlqgm/Guaxinim-pirata-lado-direito.png?rlkey=pzlh8a9xztn98ekxlvza8ohc1&st=c0l68pra;dl=0';
+        // VERIFIQUE ESTA URL: Se houver ;dl=0, substitua por &dl=0
+        playerImageSide.src = 'https://dl.dropbox.com/scl/fi/usfxquqqa8csjozrhlqgm/Guaxinim-pirata-lado-direito.png?rlkey=pzlh8a9xztn98ekxlvza8ohc1&st=c0l68pra&dl=0';
         const enemyImage = new Image();
         enemyImage.src = 'https://dl.dropbox.com/scl/fi/ift9fycq40ymfuhqbvsnk/virus.png?rlkey=63mfzrr59mdhxe58828hon4af&st=yhq6w8p7&dl=0';
         const attackEffectImage = new Image();
@@ -372,68 +373,90 @@
         let floorPattern;
         let playerDirection = 'down';
 
-        // Array of all images and sounds to load
-        const assetsToLoad = [
+        // Array para armazenar as promessas de carregamento
+        const assetPromises = [];
+
+        function loadAsset(asset) {
+            return new Promise((resolve, reject) => {
+                if (asset instanceof HTMLImageElement) {
+                    if (asset.complete && asset.naturalHeight !== 0) {
+                        resolve();
+                    } else {
+                        asset.onload = () => {
+                            assetsLoadedCount++;
+                            loadingProgress.textContent = `${Math.floor((assetsLoadedCount / assetsToLoadCount) * 100)}%`;
+                            resolve();
+                        };
+                        asset.onerror = () => {
+                            console.error(`Falha ao carregar imagem: ${asset.src}`);
+                            assetsLoadedCount++; // Ainda incrementa para não bloquear o carregamento
+                            loadingProgress.textContent = `${Math.floor((assetsLoadedCount / assetsToLoadCount) * 100)}%`;
+                            resolve(); // Resolve mesmo com erro para não travar o Promise.all
+                        };
+                    }
+                } else if (asset instanceof HTMLAudioElement) {
+                    if (asset.readyState >= 2) { // HTMLMediaElement.HAVE_CURRENT_DATA
+                        resolve();
+                    } else {
+                        asset.addEventListener('canplaythrough', () => {
+                            assetsLoadedCount++;
+                            loadingProgress.textContent = `${Math.floor((assetsLoadedCount / assetsToLoadCount) * 100)}%`;
+                            resolve();
+                        }, { once: true });
+                        asset.addEventListener('error', () => {
+                            console.error(`Falha ao carregar áudio: ${asset.src}`);
+                            assetsLoadedCount++; // Ainda incrementa
+                            loadingProgress.textContent = `${Math.floor((assetsLoadedCount / assetsToLoadCount) * 100)}%`;
+                            resolve(); // Resolve mesmo com erro para não travar o Promise.all
+                        }, { once: true });
+                        asset.load(); // Inicia o carregamento do áudio
+                    }
+                } else {
+                    resolve(); // Para outros tipos de assets, resolve imediatamente
+                }
+            });
+        }
+
+        const assets = [
             playerImageFront, playerImageBack, playerImageSide, enemyImage,
             attackEffectImage, floorTexture, wallTexture, exitImage,
             gameMusic, attackSound, enemyDefeatSound, gameOverSound, gameWonSound, buttonClickSound
         ];
+        const assetsToLoadCount = assets.length;
         let assetsLoadedCount = 0;
 
-        function assetLoadHandler() {
-            assetsLoadedCount++;
-            const progress = Math.floor((assetsLoadedCount / assetsToLoad.length) * 100);
-            loadingProgress.textContent = `${progress}%`;
+        // Adiciona todas as promessas ao array
+        assets.forEach(asset => {
+            assetPromises.push(loadAsset(asset));
+        });
 
-            if (assetsLoadedCount === assetsToLoad.length) {
-                // Ensure floorTexture is loaded before creating pattern
+        // Espera que todas as promessas sejam resolvidas
+        Promise.all(assetPromises)
+            .then(() => {
+                // Cria o padrão do chão após a floorTexture ser carregada
                 if (floorTexture.complete && floorTexture.naturalHeight !== 0) {
-                     floorPattern = ctx.createPattern(floorTexture, 'repeat');
+                    floorPattern = ctx.createPattern(floorTexture, 'repeat');
                 } else {
-                    floorTexture.onload = () => {
+                    // Fallback caso a textura do chão falhe por algum motivo inesperado no onload individual
+                    console.warn("Floor texture not fully loaded by Promise.all, attempting pattern creation anyway.");
+                    try {
                         floorPattern = ctx.createPattern(floorTexture, 'repeat');
-                        checkAllResourcesLoaded(); // Re-check after floor pattern is ready
-                    };
+                    } catch (e) {
+                        console.error("Failed to create floor pattern:", e);
+                        // Pode definir uma cor sólida ou uma textura de fallback
+                        floorPattern = null; // Ou um valor que indique para usar cor de fallback
+                    }
                 }
-                checkAllResourcesLoaded();
-            }
-        }
 
-        function checkAllResourcesLoaded() {
-            // Check if all images are loaded (including floor texture that might load later)
-            const allImagesLoaded = imagesToLoad.every(img => img.complete && img.naturalHeight !== 0);
-            // Check if all audio files are loaded
-            const allAudioLoaded = [gameMusic, attackSound, enemyDefeatSound, gameOverSound, gameWonSound, buttonClickSound].every(audio => audio.readyState >= 2); // READYSTATE_CURRENT
-
-            if (allImagesLoaded && allAudioLoaded && floorPattern) {
-                loadingScreen.style.display = 'none'; // Hide loading screen
+                loadingScreen.style.display = 'none'; // Esconde a tela de carregamento
                 startButton.removeAttribute('disabled');
                 startButton.classList.add('ready');
-                console.log('All assets loaded. Game is ready to start.');
-            }
-        }
-
-        // Set onload for each image
-        const imagesToLoad = [playerImageFront, playerImageBack, playerImageSide, enemyImage, attackEffectImage, floorTexture, wallTexture, exitImage];
-        imagesToLoad.forEach(image => {
-            image.onload = assetLoadHandler;
-            image.onerror = () => {
-                console.error(`Failed to load image: ${image.src}`);
-                assetLoadHandler(); // Still increment count to avoid blocking
-            };
-        });
-
-        // Set listeners for audio files
-        const audioFilesToLoad = [gameMusic, attackSound, enemyDefeatSound, gameOverSound, gameWonSound, buttonClickSound];
-        audioFilesToLoad.forEach(audio => {
-            audio.addEventListener('canplaythrough', assetLoadHandler);
-            audio.addEventListener('error', () => {
-                console.error(`Failed to load audio: ${audio.src}`);
-                assetLoadHandler(); // Still increment count
+                console.log('Todos os assets carregados. O jogo está pronto para iniciar.');
+            })
+            .catch(error => {
+                console.error('Erro ao carregar os assets:', error);
+                loadingProgress.textContent = 'Erro de carregamento. Verifique o console.';
             });
-            audio.load(); // Start loading the audio
-        });
-
 
         // Service Worker Registration
         if ('serviceWorker' in navigator) {
@@ -447,7 +470,6 @@
                     });
             });
         }
-
 
         startButton.addEventListener('click', () => {
             if (startButton.disabled) return; // Prevent click if not ready
@@ -781,10 +803,26 @@
         document.addEventListener('keydown', (event) => {
             if (!gameStarted) return;
             switch (event.key) {
-                case 'w': movePlayer('up'); break;
-                case 's': movePlayer('down'); break;
-                case 'a': movePlayer('left'); break;
-                case 'd': movePlayer('right'); break;
+                case 'w':
+                    buttonClickSound.currentTime = 0; // Reinicia o som
+                    buttonClickSound.play();
+                    movePlayer('up');
+                    break;
+                case 's':
+                    buttonClickSound.currentTime = 0; // Reinicia o som
+                    buttonClickSound.play();
+                    movePlayer('down');
+                    break;
+                case 'a':
+                    buttonClickSound.currentTime = 0; // Reinicia o som
+                    buttonClickSound.play();
+                    movePlayer('left');
+                    break;
+                case 'd':
+                    buttonClickSound.currentTime = 0; // Reinicia o som
+                    buttonClickSound.play();
+                    movePlayer('right');
+                    break;
                 case ' ': attack(); break;
             }
         });
@@ -966,7 +1004,7 @@
                             ctx.fillStyle = floorPattern;
                             ctx.fillRect(worldX, worldY, cellSize, cellSize);
                         } else {
-                            ctx.fillStyle = 'white';
+                            ctx.fillStyle = 'white'; // Fallback color if pattern fails
                             ctx.fillRect(worldX, worldY, cellSize, cellSize);
                         }
 
