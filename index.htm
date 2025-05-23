@@ -3,6 +3,8 @@
 <head>
     <title>Jogo do Labirinto</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, viewport-fit=cover">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         body {
             margin: 0;
@@ -125,24 +127,24 @@
         }
 
         #directional-controls button {
-    width: 70px; /* Fixed width in pixels */
-    height: 70px; /* Fixed height in pixels */
-    font-size: 45px; /* Fixed font size in pixels for the icon */
-    background-color: #333;
-    color: white;
-    border: 1px solid #555;
-    border-radius: 5px;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-}
+            width: 70px; /* Fixed width in pixels */
+            height: 70px; /* Fixed height in pixels */
+            font-size: 45px; /* Fixed font size in pixels for the icon */
+            background-color: #333;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
 
         /* Posicionamento dos botões dentro do grid (formato de cruz) */
         #btn-up { grid-area: 1 / 2 / 2 / 3; }
@@ -162,11 +164,9 @@
 
         /* Botão de ataque */
         #attack-button {
-            width: 20vmin;
-            height: 20vmin;
-            max-width: 130px;
-            max-height: 130px;
-            font-size: 4.5vw;
+            width: 130px; /* Defina uma largura fixa em pixels */
+            height: 130px; /* Defina uma altura fixa em pixels, igual à largura para manter a forma circular */
+            font-size: 50px; /* Ajuste o tamanho do ícone aqui (em pixels) */
             background-color: #dc3545;
             color: white;
             border: 1px solid #bb2d3b;
@@ -191,18 +191,18 @@
 
         /* Media Queries para ajustes finos em diferentes tamanhos de tela */
        @media (orientation: landscape) {
-    #directional-controls {
-        width: 210px;
-        height: 210px;
-    }
-}
+            #directional-controls {
+                width: 210px;
+                height: 210px;
+            }
+        }
 
-@media (min-width: 768px) {
-    #directional-controls {
-        width: 210px;
-        height: 210px;
-    }
-}
+        @media (min-width: 768px) {
+            #directional-controls {
+                width: 210px;
+                height: 210px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -231,7 +231,9 @@
             <button id="btn-down" onclick="movePlayer('down')">&#9660;</button>
         </div>
 
-        <button id="attack-button" onclick="attack()">Atacar</button>
+        <button id="attack-button" onclick="attack()">
+    <i class="fas fa-hand-fist"></i> </button>
+    </button>
     </div>
 
     <script>
