@@ -66,7 +66,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background-color: #000;
+            background-color: rgba(0, 0, 0, 1);
             color: white;
             padding: 3vw;
             border-radius: 5px;
@@ -127,7 +127,19 @@
             background-color: #28a745;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 50px; /* Borda arredondada */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Sombra */
+            transition: transform 0.2s, background-color 0.2s; /* Transição suave */
+        }
+
+        .end-game-screen button:hover {
+            transform: translateY(-2px); /* Efeito de elevação */
+            background-color: #218838; /* Escurece um pouco no hover */
+        }
+
+        .end-game-screen button:active {
+            transform: translateY(0); /* Retorna à posição original ao clicar */
+            background-color: #1e7e34; /* Mais escuro ao clicar */
         }
 
         /* Controles - Conteiner principal que engloba todos os botões */
@@ -160,7 +172,6 @@
             aspect-ratio: 1 / 1;
             margin-left: 1vw;
             flex-shrink: 0;
-            
         }
 
         #directional-controls button {
@@ -181,8 +192,8 @@
             -moz-user-select: none;
             -ms-user-select: none;
             user-select: none;
-            -webkit-tap-highlight-color: transparent; /* Para navegadores WebKit (iOS, Android Chrome) */
-    outline: none; /* Remove o outline em navegadores desktop */
+            -webkit-tap-highlight-color: transparent; /* Adicione aqui */
+            outline: none; /* Adicione aqui */
         }
 
         /* Posicionamento dos botões dentro do grid (formato de cruz) */
@@ -224,8 +235,8 @@
             -moz-user-select: none;
             -ms-user-select: none;
             user-select: none;
-            -webkit-tap-highlight-color: transparent; /* Para navegadores WebKit (iOS, Android Chrome) */
-    outline: none; /* Remove o outline em navegadores desktop */
+            -webkit-tap-highlight-color: transparent; /* Adicione aqui */
+            outline: none; /* Adicione aqui */
         }
 
         #attack-button:active {
@@ -310,9 +321,25 @@
         const loadingScreen = document.getElementById('loadingScreen');
         const loadingProgress = document.getElementById('loadingProgress');
 
+        // Sons do jogo
         const gameMusic = new Audio('https://dl.dropbox.com/scl/fi/ln6s85xx16tx6tlk94f3p/crawling-danger-303228.mp3?rlkey=jq78ikfiy3zanle8p9sl1qct9&st=b2csb5eq&dl=0');
         gameMusic.loop = true;
         gameMusic.volume = 0.5;
+
+        const attackSound = new Audio('https://dl.dropbox.com/scl/fi/pa6u280vcydsvex7mo0e0/hit.mp3?rlkey=u6e9agse4y3q5o3saxbtsxvow&st=mb60dx74&dl=0'); // URL de exemplo
+        attackSound.volume = 0.7;
+
+        const enemyDefeatSound = new Audio('https://dl.dropbox.com/scl/fi/wn6v60w9p37if9hi70i3h/argg.mp3?rlkey=11qyqjk1zpeum4swbwez036sd&st=x6ihgsht&dl=0'); // URL de exemplo
+        enemyDefeatSound.volume = 0.7;
+
+        const gameOverSound = new Audio('https://dl.dropbox.com/scl/fi/98thpjk9tziuxdnv2s91k/game-over.mp3?rlkey=xqstsgukq45sfwv5sw2aeqrv8&st=f7295y1z&dl=0'); // URL de exemplo
+        gameOverSound.volume = 0.7;
+
+        const gameWonSound = new Audio('https://dl.dropbox.com/scl/fi/1uybwae0vgm91ka6smtaa/game-won.mp3?rlkey=naeqy6jtfcibr7whk47bndfy5&st=anw0i1vx&dl=0'); // URL de exemplo
+        gameWonSound.volume = 0.7;
+
+        const buttonClickSound = new Audio('https://dl.dropbox.com/scl/fi/i29isexxnea2d7ndnucwl/button-click.mp3?rlkey=52c62t0fk0h1s3111awptd2xq&st=q1hi5f2j&dl=0'); // URL de exemplo
+        buttonClickSound.volume = 0.5;
 
         let gameStarted = false;
         let maze;
@@ -345,19 +372,20 @@
         let floorPattern;
         let playerDirection = 'down';
 
-        // Array of all images to load
-        const imagesToLoad = [
+        // Array of all images and sounds to load
+        const assetsToLoad = [
             playerImageFront, playerImageBack, playerImageSide, enemyImage,
-            attackEffectImage, floorTexture, wallTexture, exitImage
+            attackEffectImage, floorTexture, wallTexture, exitImage,
+            gameMusic, attackSound, enemyDefeatSound, gameOverSound, gameWonSound, buttonClickSound
         ];
-        let imagesLoadedCount = 0;
+        let assetsLoadedCount = 0;
 
-        function imageLoadHandler() {
-            imagesLoadedCount++;
-            const progress = Math.floor((imagesLoadedCount / imagesToLoad.length) * 100);
+        function assetLoadHandler() {
+            assetsLoadedCount++;
+            const progress = Math.floor((assetsLoadedCount / assetsToLoad.length) * 100);
             loadingProgress.textContent = `${progress}%`;
 
-            if (imagesLoadedCount === imagesToLoad.length) {
+            if (assetsLoadedCount === assetsToLoad.length) {
                 // Ensure floorTexture is loaded before creating pattern
                 if (floorTexture.complete && floorTexture.naturalHeight !== 0) {
                      floorPattern = ctx.createPattern(floorTexture, 'repeat');
@@ -372,23 +400,40 @@
         }
 
         function checkAllResourcesLoaded() {
-            if (imagesLoadedCount === imagesToLoad.length && floorPattern) {
+            // Check if all images are loaded (including floor texture that might load later)
+            const allImagesLoaded = imagesToLoad.every(img => img.complete && img.naturalHeight !== 0);
+            // Check if all audio files are loaded
+            const allAudioLoaded = [gameMusic, attackSound, enemyDefeatSound, gameOverSound, gameWonSound, buttonClickSound].every(audio => audio.readyState >= 2); // READYSTATE_CURRENT
+
+            if (allImagesLoaded && allAudioLoaded && floorPattern) {
                 loadingScreen.style.display = 'none'; // Hide loading screen
                 startButton.removeAttribute('disabled');
                 startButton.classList.add('ready');
-                console.log('All images and patterns loaded. Game is ready to start.');
+                console.log('All assets loaded. Game is ready to start.');
             }
         }
 
         // Set onload for each image
+        const imagesToLoad = [playerImageFront, playerImageBack, playerImageSide, enemyImage, attackEffectImage, floorTexture, wallTexture, exitImage];
         imagesToLoad.forEach(image => {
-            image.onload = imageLoadHandler;
+            image.onload = assetLoadHandler;
             image.onerror = () => {
                 console.error(`Failed to load image: ${image.src}`);
-                // Handle error gracefully, perhaps by falling back to a color
-                imageLoadHandler(); // Still increment count to avoid blocking
+                assetLoadHandler(); // Still increment count to avoid blocking
             };
         });
+
+        // Set listeners for audio files
+        const audioFilesToLoad = [gameMusic, attackSound, enemyDefeatSound, gameOverSound, gameWonSound, buttonClickSound];
+        audioFilesToLoad.forEach(audio => {
+            audio.addEventListener('canplaythrough', assetLoadHandler);
+            audio.addEventListener('error', () => {
+                console.error(`Failed to load audio: ${audio.src}`);
+                assetLoadHandler(); // Still increment count
+            });
+            audio.load(); // Start loading the audio
+        });
+
 
         // Service Worker Registration
         if ('serviceWorker' in navigator) {
@@ -406,6 +451,8 @@
 
         startButton.addEventListener('click', () => {
             if (startButton.disabled) return; // Prevent click if not ready
+            buttonClickSound.currentTime = 0; // Reinicia o som
+            buttonClickSound.play();
             startScreen.style.display = 'none';
             gameOverScreen.style.display = 'none';
             gameWonScreen.style.display = 'none';
@@ -415,6 +462,8 @@
         });
 
         restartButton.addEventListener('click', () => {
+            buttonClickSound.currentTime = 0; // Reinicia o som
+            buttonClickSound.play();
             gameOverScreen.style.display = 'none';
             startScreen.style.display = 'none';
             gameWonScreen.style.display = 'none';
@@ -427,6 +476,8 @@
         });
 
         playAgainButton.addEventListener('click', () => {
+            buttonClickSound.currentTime = 0; // Reinicia o som
+            buttonClickSound.play();
             gameWonScreen.style.display = 'none';
             startScreen.style.display = 'none';
             gameOverScreen.style.display = 'none';
@@ -434,6 +485,24 @@
             startGame();
             gameMusic.currentTime = 0;
             gameMusic.play();
+        });
+
+        // Adicionar som aos botões de movimento
+        document.getElementById('btn-up').addEventListener('click', () => {
+            buttonClickSound.currentTime = 0;
+            buttonClickSound.play();
+        });
+        document.getElementById('btn-left').addEventListener('click', () => {
+            buttonClickSound.currentTime = 0;
+            buttonClickSound.play();
+        });
+        document.getElementById('btn-right').addEventListener('click', () => {
+            buttonClickSound.currentTime = 0;
+            buttonClickSound.play();
+        });
+        document.getElementById('btn-down').addEventListener('click', () => {
+            buttonClickSound.currentTime = 0;
+            buttonClickSound.play();
         });
 
         function startGame() {
@@ -445,8 +514,8 @@
             playerDirection = 'down';
 
             resizeGameElements();
-            
-            cellSize = Math.floor(Math.min(canvas.width, canvas.height) / 10); 
+
+            cellSize = Math.floor(Math.min(canvas.width, canvas.height) / 10);
             visionRadius = cellSize * 5;
 
             maze = generateMaze(Math.floor(canvas.width / cellSize), Math.floor(canvas.height / cellSize));
@@ -465,7 +534,7 @@
         function resizeGameElements() {
             const controlsHeight = controls.offsetHeight;
             gameContainer.style.height = `calc(100vh - ${controlsHeight}px)`;
-            
+
             canvas.width = gameContainer.clientWidth;
             canvas.height = gameContainer.clientHeight;
         }
@@ -590,7 +659,7 @@
             }
             return enemiesArray;
         }
-        
+
         let isPlayerAnimationInProgress = false;
 
         function movePlayer(direction) {
@@ -661,6 +730,9 @@
         function attack() {
             if (!gameStarted || !player || player.isAttacking) return;
 
+            attackSound.currentTime = 0; // Reinicia o som de ataque
+            attackSound.play();
+
             player.isAttacking = true;
             setTimeout(() => {
                 player.isAttacking = false;
@@ -668,7 +740,7 @@
 
             // Define uma pequena área de ataque em vez de apenas uma célula
             const attackDetectionRadius = cellSize * 1.2; // Aumente este valor para uma área maior
-            
+
             // Calcula a posição central do ataque
             let attackCenterX = player.x + player.size / 2;
             let attackCenterY = player.y + player.size / 2;
@@ -699,10 +771,13 @@
                 // Se o inimigo estiver dentro do raio de detecção, ele é atingido
                 if (distance < attackDetectionRadius) {
                     enemies.splice(i, 1);
+                    enemyDefeatSound.currentTime = 0; // Reinicia o som de derrota do inimigo
+                    enemyDefeatSound.play();
                     break; // Remove apenas um inimigo por ataque
                 }
             }
         }
+
         document.addEventListener('keydown', (event) => {
             if (!gameStarted) return;
             switch (event.key) {
@@ -885,7 +960,7 @@
                     const worldY = y * cellSize;
 
                     const distanceToPlayer = Math.sqrt(Math.pow((player.x + player.size / 2 - worldX - cellSize / 2), 2) + Math.pow((player.y + player.size / 2 - worldY - cellSize / 2), 2));
-                    
+
                     if (distanceToPlayer < visionRadius) {
                         if (floorPattern) {
                             ctx.fillStyle = floorPattern;
@@ -970,7 +1045,7 @@
                         attackEffectX += cellSize;
                         break;
                 }
-                
+
                 if (attackEffectImage.complete && attackEffectImage.naturalHeight !== 0) {
                     ctx.drawImage(attackEffectImage, attackEffectX, attackEffectY, cellSize, cellSize);
                 } else {
@@ -1019,6 +1094,8 @@
                 cancelAnimationFrame(animationFrameId);
             }
             gameMusic.pause();
+            gameOverSound.currentTime = 0; // Reinicia o som de game over
+            gameOverSound.play();
             controls.style.display = 'none';
             gameOverGoldAmountDisplay.textContent = totalGold;
             gameOverScreen.style.display = 'flex';
@@ -1031,6 +1108,8 @@
                 cancelAnimationFrame(animationFrameId);
             }
             gameMusic.pause();
+            gameWonSound.currentTime = 0; // Reinicia o som de vitória
+            gameWonSound.play();
             controls.style.display = 'none';
 
             const earnedGold = Math.floor(Math.random() * 10000) + 1;
