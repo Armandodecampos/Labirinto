@@ -114,35 +114,35 @@
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
-            gap: 1.5vmin;
-            width: 35vmin;
-            height: 35vmin;
-            max-width: 180px;
-            max-height: 180px;
+     
+            width: 50vmin;
+            height: 50vmin;
+            max-width: 250px;
+            max-height: 250px;
             aspect-ratio: 1 / 1;
             margin-left: 1vw;
             flex-shrink: 0;
         }
 
         #directional-controls button {
-            width: 100%;
-            height: 100%;
-            font-size: 6vw;
-            background-color: #333;
-            color: white;
-            border: 1px solid #555;
-            border-radius: 5px;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-        }
+    width: 70px; /* Fixed width in pixels */
+    height: 70px; /* Fixed height in pixels */
+    font-size: 45px; /* Fixed font size in pixels for the icon */
+    background-color: #333;
+    color: white;
+    border: 1px solid #555;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
 
         /* Posicionamento dos botões dentro do grid (formato de cruz) */
         #btn-up { grid-area: 1 / 2 / 2 / 3; }
@@ -190,37 +190,19 @@
         }
 
         /* Media Queries para ajustes finos em diferentes tamanhos de tela */
-        @media (orientation: landscape) {
-            #directional-controls {
-                width: 28vmin;
-                height: 28vmin;
-            }
-            #attack-button {
-                width: 16vmin;
-                height: 16vmin;
-            }
-            #directional-controls button {
-                font-size: 5vw;
-            }
-            #attack-button {
-                font-size: 3.5vw;
-            }
-        }
+       @media (orientation: landscape) {
+    #directional-controls {
+        width: 210px;
+        height: 210px;
+    }
+}
 
-        @media (min-width: 768px) {
-            #directional-controls {
-                width: 180px;
-                height: 180px;
-            }
-            #directional-controls button {
-                font-size: 45px;
-            }
-            #attack-button {
-                width: 130px;
-                height: 130px;
-                font-size: 30px;
-            }
-        }
+@media (min-width: 768px) {
+    #directional-controls {
+        width: 210px;
+        height: 210px;
+    }
+}
     </style>
 </head>
 <body>
@@ -265,7 +247,7 @@
         const gameContainer = document.getElementById('gameContainer');
 
         // Adicionar elemento de áudio
-        const gameMusic = new Audio('https://dl.dropbox.com/scl/fi/ln6s85xx16tx6tlk94f3p/crawling-danger-303228.mp3?rlkey=jq78ikfiy3zanle8p9sl1qct9&st=b2csb9eq&dl=0');
+        const gameMusic = new Audio('https://dl.dropbox.com/scl/fi/ln6s85xx16tx6tlk94f3p/crawling-danger-303228.mp3?rlkey=jq78ikfiy3zanle8p9sl1qct9&st=b2csb5eq&dl=0');
         gameMusic.loop = true; // Para a música tocar em loop
         gameMusic.volume = 0.5; // Ajuste o volume se necessário
 
@@ -381,9 +363,8 @@
                 cancelAnimationFrame(animationFrameId);
             }
             gameStarted = true;
-            // Removed playerMoving and playerMoveQueue reset
-            // playerMoving = false;
-            // playerMoveQueue = [];
+            // Reset the flag to allow player movement after restart
+            isPlayerAnimationInProgress = false; 
             playerDirection = 'down'; // Reset player direction at start
 
             resizeGameElements();
