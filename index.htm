@@ -24,7 +24,6 @@
             flex-grow: 1;
             position: relative;
             overflow: hidden;
-            /* Add padding-bottom to avoid content being covered by fixed controls */
             padding-bottom: 0; /* This will be dynamically set by JavaScript */
             box-sizing: border-box; /* Ensures padding is included in the total height */
         }
@@ -38,19 +37,47 @@
             position: absolute;
         }
 
+        /* Loading Screen */
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.95);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 40;
+            font-size: 5vw;
+            text-align: center;
+        }
+        #loadingScreen p {
+            margin-top: 2vw;
+            font-size: 3vw;
+        }
+
         /* Estilos da tela inicial */
         #startScreen {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
             background-color: rgba(0, 0, 0, 0.8);
             color: white;
             padding: 3vw;
             border-radius: 5px;
             text-align: center;
             z-index: 20;
-            max-width: 90vw;
+            max-width: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
         }
         #startButton {
             padding: 2vw 4vw;
@@ -60,15 +87,21 @@
             color: white;
             border: none;
             border-radius: 5px;
+            opacity: 0.5; /* Disabled state */
+            cursor: not-allowed;
+        }
+        #startButton.ready {
+            opacity: 1;
+            cursor: pointer;
         }
 
         /* Estilos das telas de Fim de Jogo (Game Over e Game Won) */
         .end-game-screen {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             background-color: rgb(0, 0, 0);
             color: white;
             display: none;
@@ -76,8 +109,8 @@
             align-items: center;
             justify-content: center;
             z-index: 30;
-            font-size: 5vw;
             font-weight: bold;
+            box-sizing: border-box;
         }
 
         .end-game-screen img {
@@ -89,7 +122,7 @@
         .end-game-screen button {
             margin-top: 2vw;
             padding: 2vw 4vw;
-            font-size: 3.5vw;
+            font-size: 25px;
             cursor: pointer;
             background-color: #28a745;
             color: white;
@@ -99,10 +132,10 @@
 
         /* Controles - Conteiner principal que engloba todos os botões */
         #controls {
-            position: fixed; /* Changed to fixed */
-            bottom: 0; /* Aligns to the bottom */
-            left: 0; /* Aligns to the left */
-            right: 0; /* Aligns to the right */
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
             height:30%;
             display: flex;
             justify-content: space-between;
@@ -120,7 +153,6 @@
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
-     
             width: 50vmin;
             height: 50vmin;
             max-width: 250px;
@@ -131,9 +163,9 @@
         }
 
         #directional-controls button {
-            width: 70px; /* Fixed width in pixels */
-            height: 70px; /* Fixed height in pixels */
-            font-size: 45px; /* Fixed font size in pixels for the icon */
+            width: 70px;
+            height: 70px;
+            font-size: 45px;
             background-color: #333;
             color: white;
             border: 1px solid #555;
@@ -212,6 +244,11 @@
     </style>
 </head>
 <body>
+    <div id="loadingScreen">
+        <p>Carregando recursos do jogo...</p>
+        <p id="loadingProgress">0%</p>
+    </div>
+
     <div id="gameContainer">
         <div id="startScreen">
             <h1>Labirinto</h1>
@@ -219,10 +256,10 @@
                 <img src="https://dl.dropbox.com/scl/fi/qnkpqvyk4p1jbpx6sl2ws/bau.png?rlkey=1ymyfwp7yhhr7w70k7uwk8787&st=2g7f2edw&dl=0" alt="Moeda" style="width: 8vw; height: 8vw; max-width: 60px; max-height: 60px; margin-right: 2vw;">
                 <span id="startScreenGoldAmount" style="font-size: 5vw; color: gold;">0</span>
             </div>
-            <button id="startButton">Iniciar Jogo</button>
+            <button id="startButton" disabled>Iniciar Jogo</button>
         </div>
         <div id="gameOverScreen" class="end-game-screen">
-            <h1 style="color:#fff">Fim de jogo!</h1>
+            <h1>Fim de jogo!</h1>
             <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 2vw;">
                 <img src="https://dl.dropbox.com/scl/fi/qnkpqvyk4p1jbpx6sl2ws/bau.png?rlkey=1ymyfwp7yhhr7w70k7uwk8787&st=2g7f2edw&dl=0" alt="Moeda" style="width: 8vw; height: 8vw; max-width: 60px; max-height: 60px; margin-right: 2vw;">
                 <span id="gameOverGoldAmount" style="font-size: 5vw; color: gold;">0</span>
@@ -262,14 +299,15 @@
         const gameWonScreen = document.getElementById('gameWonScreen');
         const playAgainButton = document.getElementById('playAgainButton');
         const gameContainer = document.getElementById('gameContainer');
-        const gameWonGoldAmountDisplay = document.getElementById('gameWonGoldAmount'); // Elemento para exibir o ouro na tela de vitória
-        const startScreenGoldAmountDisplay = document.getElementById('startScreenGoldAmount'); // Elemento para exibir o ouro na tela inicial
-        const gameOverGoldAmountDisplay = document.getElementById('gameOverGoldAmount'); // Elemento para exibir o ouro na tela de Game Over
+        const gameWonGoldAmountDisplay = document.getElementById('gameWonGoldAmount');
+        const startScreenGoldAmountDisplay = document.getElementById('startScreenGoldAmount');
+        const gameOverGoldAmountDisplay = document.getElementById('gameOverGoldAmount');
+        const loadingScreen = document.getElementById('loadingScreen');
+        const loadingProgress = document.getElementById('loadingProgress');
 
-        // Adicionar elemento de áudio
         const gameMusic = new Audio('https://dl.dropbox.com/scl/fi/ln6s85xx16tx6tlk94f3p/crawling-danger-303228.mp3?rlkey=jq78ikfiy3zanle8p9sl1qct9&st=b2csb5eq&dl=0');
-        gameMusic.loop = true; // Para a música tocar em loop
-        gameMusic.volume = 0.5; // Ajuste o volume se necessário
+        gameMusic.loop = true;
+        gameMusic.volume = 0.5;
 
         let gameStarted = false;
         let maze;
@@ -279,84 +317,96 @@
         let visionRadius;
         let gameSpeed = 75;
         let animationFrameId;
-        let totalGold = 0; // Variável para acumular o ouro
+        let totalGold = 0;
 
-        // Player images
+        // Image objects
         const playerImageFront = new Image();
-        playerImageFront.src = 'https://dl.dropbox.com/scl/fi/oj14ct0ei359u2xvjnc3q/Guaxinim-pirata-frente.png?rlkey=05dn1b8k0lf090n1a1pty5vsn&st=5a7dzxfi&dl=0'; // Path to the player front image
+        playerImageFront.src = 'https://dl.dropbox.com/scl/fi/oj14ct0ei359u2xvjnc3q/Guaxinim-pirata-frente.png?rlkey=05dn1b8k0lf090n1a1pty5vsn&st=5a7dzxfi&dl=0';
         const playerImageBack = new Image();
-        playerImageBack.src = 'https://dl.dropbox.com/scl/fi/ga6l0pmdyu3bq7k8lrpje/Guaxinim-pirata-costas.png?rlkey=snacwdyl9or37z80dcqz4invt&st=ne2qmtq9&dl=0'; // Path to the player back image
+        playerImageBack.src = 'https://dl.dropbox.com/scl/fi/ga6l0pmdyu3bq7k8lrpje/Guaxinim-pirata-costas.png?rlkey=snacwdyl9or37z80dcqz4invt&st=ne2qmtq9&dl=0';
         const playerImageSide = new Image();
-        playerImageSide.src = 'https://dl.dropbox.com/scl/fi/usfxquqqa8csjozrhlqgm/Guaxinim-pirata-lado-direito.png?rlkey=pzlh8a9xztn98ekxlvza8ohc1&st=c0l68pra;dl=0'; // Path to the player side image
-
-        // Enemy image
+        playerImageSide.src = 'https://dl.dropbox.com/scl/fi/usfxquqqa8csjozrhlqgm/Guaxinim-pirata-lado-direito.png?rlkey=pzlh8a9xztn98ekxlvza8ohc1&st=c0l68pra;dl=0';
         const enemyImage = new Image();
-        enemyImage.src = 'https://dl.dropbox.com/scl/fi/ift9fycq40ymfuhqbvsnk/virus.png?rlkey=63mfzrr59mdhxe58828hon4af&st=yhq6w8p7&dl=0'; // Replace with your enemy image path
-
-        // Attack effect image
+        enemyImage.src = 'https://dl.dropbox.com/scl/fi/ift9fycq40ymfuhqbvsnk/virus.png?rlkey=63mfzrr59mdhxe58828hon4af&st=yhq6w8p7&dl=0';
         const attackEffectImage = new Image();
-        attackEffectImage.src = 'https://dl.dropbox.com/scl/fi/wsfuzim41kzcdda33g9cb/Pngtree-glow-light-effect-orange-sparkling_19277829.png?rlkey=6n6oofd62ot29w4d5pdchkbm4&st=h8c8msg7&dl=0'; // Placeholder for attack effect image
-        attackEffectImage.onerror = () => console.error('Failed to load attack effect image.');
-
-
-        // Floor texture image
+        attackEffectImage.src = 'https://dl.dropbox.com/scl/fi/wsfuzim41kzcdda33g9cb/Pngtree-glow-light-effect-orange-sparkling_19277829.png?rlkey=6n6oofd62ot29w4d5pdchkbm4&st=n9kgh9nv&dl=0';
         const floorTexture = new Image();
-        floorTexture.src = 'https://dl.dropbox.com/scl/fi/k1iy1g81iqc6rkevawqm7/Gemini_Generated_Image_yblibxyblibxybli.png?rlkey=2pqns5u6xomuw1v1wotjghmy0&st=2wv28s3m&dl=0';
-        let floorPattern; // To store the created pattern
-
-        // Wall texture image
+        floorTexture.src = 'https://dl.dropbox.com/scl/fi/k1iy1g81iqc6rkevawqm7/Gemini_Generated_Image_yblibxyblibxybli.png?rlkey=2pqns5u6xomuw1v1wotjghmy0&st=2wv28s3s&dl=0';
         const wallTexture = new Image();
-        wallTexture.src = 'https://dl.dropbox.com/scl/fi/hhe32wffjev38dypmimhn/Gemini_Generated_Image_l2nvkkl2nvkkl2nv.png?rlkey=ergtplwxo4bfunx1zd2xh9dn4&st=oa6w2icj&dl=0'; 
-        
-        // Exit image (NOVA IMAGEM AQUI)
+        wallTexture.src = 'https://dl.dropbox.com/scl/fi/hhe32wffjev38dypmimhn/Gemini_Generated_Image_l2nvkkl2nvkkl2nv.png?rlkey=ergtplwxo4bfunx1zd2xh9dn4&st=oa6w2icj&dl=0';
         const exitImage = new Image();
-        exitImage.src = 'https://dl.dropbox.com/scl/fi/qnkpqvyk4p1jbpx6sl2ws/bau.png?rlkey=1ymyfwp7yhhr7w70k7uwk8787&st=2g7f2edw&dl=0'; // Substitua pelo URL da sua imagem de saída
+        exitImage.src = 'https://dl.dropbox.com/scl/fi/qnkpqvyk4p1jbpx6sl2ws/bau.png?rlkey=1ymyfwp7yhhr7w70k7uwk8787&st=2g7f2edw&dl=0';
 
-        // Variable to store the current player direction
-        let playerDirection = 'down'; // 'up', 'down', 'left', 'right'
+        let floorPattern;
+        let playerDirection = 'down';
 
-        // Wait for all images to load before starting the game
-        let imagesLoaded = 0;
-        const totalImages = 7; // player front, back, side, enemy, floor texture, wall texture, attack effect, exit image
+        // Array of all images to load
+        const imagesToLoad = [
+            playerImageFront, playerImageBack, playerImageSide, enemyImage,
+            attackEffectImage, floorTexture, wallTexture, exitImage
+        ];
+        let imagesLoadedCount = 0;
 
         function imageLoadHandler() {
-            imagesLoaded++;
-            if (imagesLoaded === totalImages) {
-                // All images are loaded, now create the patterns
+            imagesLoadedCount++;
+            const progress = Math.floor((imagesLoadedCount / imagesToLoad.length) * 100);
+            loadingProgress.textContent = `${progress}%`;
+
+            if (imagesLoadedCount === imagesToLoad.length) {
                 // Ensure floorTexture is loaded before creating pattern
                 if (floorTexture.complete && floorTexture.naturalHeight !== 0) {
                      floorPattern = ctx.createPattern(floorTexture, 'repeat');
                 } else {
                     floorTexture.onload = () => {
                         floorPattern = ctx.createPattern(floorTexture, 'repeat');
+                        checkAllResourcesLoaded(); // Re-check after floor pattern is ready
                     };
                 }
-                console.log('All images and patterns loaded.');
+                checkAllResourcesLoaded();
             }
         }
 
-        playerImageFront.onload = imageLoadHandler;
-        playerImageBack.onload = imageLoadHandler;
-        playerImageSide.onload = imageLoadHandler;
-        enemyImage.onload = imageLoadHandler;
-        floorTexture.onload = imageLoadHandler;
-        wallTexture.onload = imageLoadHandler;
-        attackEffectImage.onload = imageLoadHandler;
-        exitImage.onload = imageLoadHandler; // Carrega a imagem da saída
+        function checkAllResourcesLoaded() {
+            if (imagesLoadedCount === imagesToLoad.length && floorPattern) {
+                loadingScreen.style.display = 'none'; // Hide loading screen
+                startButton.removeAttribute('disabled');
+                startButton.classList.add('ready');
+                console.log('All images and patterns loaded. Game is ready to start.');
+            }
+        }
+
+        // Set onload for each image
+        imagesToLoad.forEach(image => {
+            image.onload = imageLoadHandler;
+            image.onerror = () => {
+                console.error(`Failed to load image: ${image.src}`);
+                // Handle error gracefully, perhaps by falling back to a color
+                imageLoadHandler(); // Still increment count to avoid blocking
+            };
+        });
+
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registered with scope:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.error('Service Worker registration failed:', error);
+                    });
+            });
+        }
+
 
         startButton.addEventListener('click', () => {
-            // Ensure pattern is available before starting, or handle loading state
-            if (!floorPattern) {
-                console.warn('Floor pattern not yet loaded. Please wait.');
-                // Optionally disable button or show loading message
-                return;
-            }
+            if (startButton.disabled) return; // Prevent click if not ready
             startScreen.style.display = 'none';
             gameOverScreen.style.display = 'none';
             gameWonScreen.style.display = 'none';
             controls.style.display = 'flex';
             startGame();
-            gameMusic.play(); // Iniciar a música quando o jogo começa
+            gameMusic.play();
         });
 
         restartButton.addEventListener('click', () => {
@@ -364,11 +414,11 @@
             startScreen.style.display = 'none';
             gameWonScreen.style.display = 'none';
             controls.style.display = 'flex';
-            totalGold = 0; // Reseta o ouro ao reiniciar o jogo
-            startScreenGoldAmountDisplay.textContent = totalGold; // Atualiza o ouro na tela inicial
+            totalGold = 0;
+            startScreenGoldAmountDisplay.textContent = totalGold;
             startGame();
-            gameMusic.currentTime = 0; // Reiniciar a música
-            gameMusic.play(); // Iniciar a música novamente
+            gameMusic.currentTime = 0;
+            gameMusic.play();
         });
 
         playAgainButton.addEventListener('click', () => {
@@ -376,10 +426,9 @@
             startScreen.style.display = 'none';
             gameOverScreen.style.display = 'none';
             controls.style.display = 'flex';
-            // Ouro não é resetado aqui, pois é "próxima fase"
             startGame();
-            gameMusic.currentTime = 0; // Reiniciar a música
-            gameMusic.play(); // Iniciar a música novamente
+            gameMusic.currentTime = 0;
+            gameMusic.play();
         });
 
         function startGame() {
@@ -387,13 +436,11 @@
                 cancelAnimationFrame(animationFrameId);
             }
             gameStarted = true;
-            // Reset the flag to allow player movement after restart
-            isPlayerAnimationInProgress = false; 
-            playerDirection = 'down'; // Reset player direction at start
+            isPlayerAnimationInProgress = false;
+            playerDirection = 'down';
 
             resizeGameElements();
             
-            // Reduz o número de células para que cada célula seja maior, tornando o labirinto maior
             cellSize = Math.floor(Math.min(canvas.width, canvas.height) / 10); 
             visionRadius = cellSize * 5;
 
@@ -411,7 +458,6 @@
         }
 
         function resizeGameElements() {
-            // Set gameContainer height based on controls height
             const controlsHeight = controls.offsetHeight;
             gameContainer.style.height = `calc(100vh - ${controlsHeight}px)`;
             
@@ -422,33 +468,27 @@
         window.addEventListener('resize', () => {
             if (gameStarted) {
                 resizeGameElements();
-                // Reduz o número de células para que cada célula seja maior
                 cellSize = Math.floor(Math.min(canvas.width, canvas.height) / 10);
                 visionRadius = cellSize * 5;
-                // Atualiza o tamanho do jogador e inimigos para se ajustarem perfeitamente à célula
-                player.size = cellSize; 
-                player.attackRange = cellSize * 1.5; // Mantém o alcance de ataque proporcional
+                player.size = cellSize;
+                player.attackRange = cellSize * 1.5;
                 player.x = Math.floor(player.x / cellSize) * cellSize;
                 player.y = Math.floor(player.y / cellSize) * cellSize;
 
-
                 enemies.forEach(enemy => {
-                    enemy.size = cellSize; 
+                    enemy.size = cellSize;
                     enemy.x = Math.floor(enemy.x / cellSize) * cellSize;
                     enemy.y = Math.floor(enemy.y / cellSize) * cellSize;
                 });
             } else {
-                // If game not started, just ensure initial sizing is correct on resize
                 resizeGameElements();
             }
         });
 
-        // Initial call to resize elements when the page loads
         document.addEventListener('DOMContentLoaded', () => {
             resizeGameElements();
-            startScreenGoldAmountDisplay.textContent = totalGold; // Exibe o ouro inicial na tela de início
+            startScreenGoldAmountDisplay.textContent = totalGold;
         });
-
 
         function generateMaze(width, height) {
             const grid = Array(height).fill(null).map(() => Array(width).fill(1));
@@ -523,11 +563,9 @@
         function createPlayer() {
             for (let y = 0; y < maze.length; y++) {
                 if (maze[y][0] === 0) {
-                    // Tamanho do jogador ajustado para caber perfeitamente na célula
                     return { x: 0 * cellSize, y: y * cellSize, size: cellSize, speed: 5, isAttacking: false, attackRange: cellSize * 1.5 };
                 }
             }
-            // Fallback: Tamanho do jogador ajustado para caber perfeitamente na célula
             return { x: 1 * cellSize, y: 1 * cellSize, size: cellSize, speed: 5, isAttacking: false, attackRange: cellSize * 1.5 };
         }
 
@@ -541,7 +579,6 @@
                 const randomX = Math.floor(Math.random() * maze[0].length);
 
                 if (maze[randomY][randomX] === 0 && maze[randomY][randomX] !== 2 && (Math.abs(randomX - player.x / cellSize) > 5 || Math.abs(randomY - player.y / cellSize) > 5)) {
-                    // Tamanho do inimigo ajustado para caber perfeitamente na célula
                     enemiesArray.push({ x: randomX * cellSize, y: randomY * cellSize, size: cellSize, speed: 3, moving: false, targetX: null, targetY: null, moveTimer: 0 });
                     placedEnemies++;
                 }
@@ -549,11 +586,10 @@
             return enemiesArray;
         }
         
-        // This variable will prevent rapid clicks from queuing up multiple moves while one is animating
         let isPlayerAnimationInProgress = false;
 
         function movePlayer(direction) {
-            if (!gameStarted || isPlayerAnimationInProgress) return; // Prevents new moves if one is already animating
+            if (!gameStarted || isPlayerAnimationInProgress) return;
 
             let targetX = player.x;
             let targetY = player.y;
@@ -585,11 +621,10 @@
                     break;
             }
 
-            // Verifica se a próxima célula é válida (não é uma parede) antes de permitir o movimento
             if (nextGridY >= 0 && nextGridY < maze.length && nextGridX >= 0 && nextGridX < maze[0].length && maze[nextGridY][nextGridX] !== 1) {
-                isPlayerAnimationInProgress = true; // Set flag when animation starts
+                isPlayerAnimationInProgress = true;
                 animateMove(player, targetX, targetY, () => {
-                    isPlayerAnimationInProgress = false; // Clear flag when animation completes
+                    isPlayerAnimationInProgress = false;
                 });
             }
         }
@@ -610,7 +645,7 @@
                 if (currentStep < steps) {
                     animationFrameId = requestAnimationFrame(animationFrame);
                 } else {
-                    entity.x = targetX; // Garante que a entidade se encaixe perfeitamente no alvo no final
+                    entity.x = targetX;
                     entity.y = targetY;
                     if (callback) callback();
                 }
@@ -632,7 +667,6 @@
             let attackTargetGridX = playerGridX;
             let attackTargetGridY = playerGridY;
 
-            // Determine the attack target cell based on player direction
             switch (playerDirection) {
                 case 'up':
                     attackTargetGridY--;
@@ -648,7 +682,6 @@
                     break;
             }
 
-            // Check if the attack target cell is within maze bounds
             if (attackTargetGridY >= 0 && attackTargetGridY < maze.length &&
                 attackTargetGridX >= 0 && attackTargetGridX < maze[0].length) {
 
@@ -657,10 +690,8 @@
                     const enemyGridX = Math.floor(enemy.x / cellSize);
                     const enemyGridY = Math.floor(enemy.y / cellSize);
 
-                    // If an enemy is in the attack target cell, remove it
                     if (enemyGridX === attackTargetGridX && enemyGridY === attackTargetGridY) {
                         enemies.splice(i, 1);
-                        // Assuming one enemy per cell, or only one hit per attack
                         break;
                     }
                 }
@@ -849,35 +880,33 @@
                     const worldY = y * cellSize;
 
                     const distanceToPlayer = Math.sqrt(Math.pow((player.x + player.size / 2 - worldX - cellSize / 2), 2) + Math.pow((player.y + player.size / 2 - worldY - cellSize / 2), 2));
+                    
                     if (distanceToPlayer < visionRadius) {
+                        if (floorPattern) {
+                            ctx.fillStyle = floorPattern;
+                            ctx.fillRect(worldX, worldY, cellSize, cellSize);
+                        } else {
+                            ctx.fillStyle = 'white';
+                            ctx.fillRect(worldX, worldY, cellSize, cellSize);
+                        }
+
                         if (maze[y][x] === 1) {
-                            // Draw the wall texture instead of a filled rectangle
                             if (wallTexture.complete && wallTexture.naturalHeight !== 0) {
                                 ctx.drawImage(wallTexture, worldX, worldY, cellSize, cellSize);
                             } else {
-                                ctx.fillStyle = 'darkgrey'; // Fallback if texture not loaded
+                                ctx.fillStyle = 'darkgrey';
                                 ctx.fillRect(worldX, worldY, cellSize, cellSize);
                             }
                         } else if (maze[y][x] === 2) {
-                            // Draw the exit image instead of a green rectangle
                             if (exitImage.complete && exitImage.naturalHeight !== 0) {
                                 ctx.drawImage(exitImage, worldX, worldY, cellSize, cellSize);
                             } else {
-                                ctx.fillStyle = 'green'; // Fallback if texture not loaded
-                                ctx.fillRect(worldX, worldY, cellSize, cellSize);
-                            }
-                        } else {
-                            // Apply floor texture
-                            if (floorPattern) {
-                                ctx.fillStyle = floorPattern;
-                                ctx.fillRect(worldX, worldY, cellSize, cellSize);
-                            } else {
-                                ctx.fillStyle = 'white'; // Fallback if texture not loaded
+                                ctx.fillStyle = 'green';
                                 ctx.fillRect(worldX, worldY, cellSize, cellSize);
                             }
                         }
                     } else {
-                        ctx.fillStyle = 'black'; // Out of vision
+                        ctx.fillStyle = 'black';
                         ctx.fillRect(worldX, worldY, cellSize, cellSize);
                     }
                 }
@@ -888,7 +917,7 @@
             if (!player) return;
 
             let currentImage;
-            let scaleX = 1; // For horizontal flipping
+            let scaleX = 1;
 
             switch (playerDirection) {
                 case 'up':
@@ -899,51 +928,47 @@
                     break;
                 case 'left':
                     currentImage = playerImageSide;
-                    scaleX = -1; // Flip image for left direction
+                    scaleX = -1;
                     break;
                 case 'right':
                     currentImage = playerImageSide;
                     break;
                 default:
-                    currentImage = playerImageFront; // Default to front if no direction is set
+                    currentImage = playerImageFront;
             }
 
-            ctx.save(); // Save the current context state
+            ctx.save();
             if (scaleX === -1) {
-                // Adjust translation point for flipping around the player's center
                 ctx.translate(player.x + player.size, player.y);
                 ctx.scale(scaleX, 1);
                 ctx.drawImage(currentImage, 0, 0, player.size, player.size);
             } else {
                 ctx.drawImage(currentImage, player.x, player.y, player.size, player.size);
             }
-            ctx.restore(); // Restore the context state
+            ctx.restore();
 
             if (player.isAttacking) {
                 let attackEffectX = player.x;
                 let attackEffectY = player.y;
 
-                // Adjust the attack effect position based on player direction
                 switch (playerDirection) {
                     case 'up':
-                        attackEffectY -= cellSize; // Move up one cell
+                        attackEffectY -= cellSize;
                         break;
                     case 'down':
-                        attackEffectY += cellSize; // Move down one cell
+                        attackEffectY += cellSize;
                         break;
                     case 'left':
-                        attackEffectX -= cellSize; // Move left one cell
+                        attackEffectX -= cellSize;
                         break;
                         case 'right':
-                        attackEffectX += cellSize; // Move right one cell
+                        attackEffectX += cellSize;
                         break;
                 }
                 
-                // Draw the attack effect image
                 if (attackEffectImage.complete && attackEffectImage.naturalHeight !== 0) {
                     ctx.drawImage(attackEffectImage, attackEffectX, attackEffectY, cellSize, cellSize);
                 } else {
-                    // Fallback to red square if image not loaded
                     ctx.strokeStyle = 'red';
                     ctx.lineWidth = 5;
                     ctx.strokeRect(attackEffectX, attackEffectY, cellSize, cellSize);
@@ -988,11 +1013,11 @@
             if (animationFrameId) {
                 cancelAnimationFrame(animationFrameId);
             }
-            gameMusic.pause(); // Parar a música no Game Over
+            gameMusic.pause();
             controls.style.display = 'none';
-            gameOverGoldAmountDisplay.textContent = totalGold; // Exibe o ouro acumulado antes de perder
+            gameOverGoldAmountDisplay.textContent = totalGold;
             gameOverScreen.style.display = 'flex';
-            totalGold = 0; // Reseta o ouro quando o jogo termina em Game Over
+            totalGold = 0;
         }
 
         function gameWon() {
@@ -1000,12 +1025,12 @@
             if (animationFrameId) {
                 cancelAnimationFrame(animationFrameId);
             }
-            gameMusic.pause(); // Parar a música quando o jogo for ganho
+            gameMusic.pause();
             controls.style.display = 'none';
 
-            const earnedGold = Math.floor(Math.random() * 10000) + 1; // Ouro entre 1 e 10.000
+            const earnedGold = Math.floor(Math.random() * 10000) + 1;
             totalGold += earnedGold;
-            gameWonGoldAmountDisplay.textContent = totalGold; // Atualiza a exibição do ouro na tela de vitória
+            gameWonGoldAmountDisplay.textContent = totalGold;
             gameWonScreen.style.display = 'flex';
         }
     </script>
