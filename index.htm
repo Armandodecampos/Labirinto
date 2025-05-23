@@ -10,7 +10,7 @@
             background-color: #000;
             display: flex;
             flex-direction: column;
-            height:70vh;
+            height: 70%;
             width: 100vw;
             -webkit-user-select: none;
             -moz-user-select: none;
@@ -20,7 +20,6 @@
 
         #gameContainer {
             display: flex;
-            height: 60%;
             flex-direction: column;
             flex-grow: 1;
             position: relative;
@@ -98,7 +97,7 @@
             bottom: 0; /* Aligns to the bottom */
             left: 0; /* Aligns to the left */
             right: 0; /* Aligns to the right */
-            height:30vh;
+            height:30%;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -266,7 +265,7 @@
         const gameContainer = document.getElementById('gameContainer');
 
         // Adicionar elemento de áudio
-        const gameMusic = new Audio('https://dl.dropbox.com/scl/fi/ln6s85xx16tx6tlk94f3p/crawling-danger-303228.mp3?rlkey=jq78ikfiy3zanle8p9sl1qct9&st=gzx0f4m8&dl=0');
+        const gameMusic = new Audio('https://dl.dropbox.com/scl/fi/i6r50c184c1t28022t1h6/music.mp3?rlkey=v14382r6j6353d2r9l56g6r1t&st=0f74h175&dl=0');
         gameMusic.loop = true; // Para a música tocar em loop
         gameMusic.volume = 0.5; // Ajuste o volume se necessário
 
@@ -293,6 +292,12 @@
         const enemyImage = new Image();
         enemyImage.src = 'https://dl.dropbox.com/scl/fi/ift9fycq40ymfuhqbvsnk/virus.png?rlkey=63mfzrr59mdhxe58828hon4af&st=yhq6w8p7&dl=0'; // Replace with your enemy image path
 
+        // Attack effect image
+        const attackEffectImage = new Image();
+        attackEffectImage.src = 'https://dl.dropbox.com/scl/fi/wsfuzim41kzcdda33g9cb/Pngtree-glow-light-effect-orange-sparkling_19277829.png?rlkey=6n6oofd62ot29w4d5pdchkbm4&st=h8c8msg7&dl=0'; // Placeholder for attack effect image
+        attackEffectImage.onerror = () => console.error('Failed to load attack effect image.');
+
+
         // Floor texture image
         const floorTexture = new Image();
         floorTexture.src = 'https://dl.dropbox.com/scl/fi/k1iy1g81iqc6rkevawqm7/Gemini_Generated_Image_yblibxyblibxybli.png?rlkey=2pqns5u6xomuw1v1wotjghmy0&st=2wv28s3m&dl=0';
@@ -308,7 +313,7 @@
 
         // Wait for all images to load before starting the game
         let imagesLoaded = 0;
-        const totalImages = 5; // player front, back, side, enemy, floor texture, wall texture
+        const totalImages = 6; // player front, back, side, enemy, floor texture, wall texture, attack effect
 
         function imageLoadHandler() {
             imagesLoaded++;
@@ -332,6 +337,7 @@
         enemyImage.onload = imageLoadHandler;
         floorTexture.onload = imageLoadHandler;
         wallTexture.onload = imageLoadHandler;
+        attackEffectImage.onload = imageLoadHandler;
 
 
         startButton.addEventListener('click', () => {
@@ -380,7 +386,8 @@
 
             resizeGameElements();
             
-            cellSize = Math.floor(Math.min(canvas.width, canvas.height) / 20); 
+            // Reduz o número de células para que cada célula seja maior, tornando o labirinto maior
+            cellSize = Math.floor(Math.min(canvas.width, canvas.height) / 10); 
             visionRadius = cellSize * 5;
 
             maze = generateMaze(Math.floor(canvas.width / cellSize), Math.floor(canvas.height / cellSize));
@@ -408,16 +415,20 @@
         window.addEventListener('resize', () => {
             if (gameStarted) {
                 resizeGameElements();
-                cellSize = Math.floor(Math.min(canvas.width, canvas.height) / 20);
+                // Reduz o número de células para que cada célula seja maior
+                cellSize = Math.floor(Math.min(canvas.width, canvas.height) / 10);
                 visionRadius = cellSize * 5;
+                // Atualiza o tamanho do jogador e inimigos para se ajustarem perfeitamente à célula
+                player.size = cellSize; 
+                player.attackRange = cellSize * 1.5; // Mantém o alcance de ataque proporcional
                 player.x = Math.floor(player.x / cellSize) * cellSize;
                 player.y = Math.floor(player.y / cellSize) * cellSize;
-                player.size = cellSize * 0.8;
+
 
                 enemies.forEach(enemy => {
+                    enemy.size = cellSize; 
                     enemy.x = Math.floor(enemy.x / cellSize) * cellSize;
                     enemy.y = Math.floor(enemy.y / cellSize) * cellSize;
-                    enemy.size = cellSize * 0.6;
                 });
             } else {
                 // If game not started, just ensure initial sizing is correct on resize
@@ -502,10 +513,12 @@
         function createPlayer() {
             for (let y = 0; y < maze.length; y++) {
                 if (maze[y][0] === 0) {
-                    return { x: 0 * cellSize, y: y * cellSize, size: cellSize * 0.8, speed: 5, isAttacking: false, attackRange: cellSize };
+                    // Tamanho do jogador ajustado para caber perfeitamente na célula
+                    return { x: 0 * cellSize, y: y * cellSize, size: cellSize, speed: 5, isAttacking: false, attackRange: cellSize * 1.5 };
                 }
             }
-            return { x: 1 * cellSize, y: 1 * cellSize, size: cellSize * 0.8, speed: 5, isAttacking: false, attackRange: cellSize };
+            // Fallback: Tamanho do jogador ajustado para caber perfeitamente na célula
+            return { x: 1 * cellSize, y: 1 * cellSize, size: cellSize, speed: 5, isAttacking: false, attackRange: cellSize * 1.5 };
         }
 
         function generateEnemies() {
@@ -518,7 +531,8 @@
                 const randomX = Math.floor(Math.random() * maze[0].length);
 
                 if (maze[randomY][randomX] === 0 && maze[randomY][randomX] !== 2 && (Math.abs(randomX - player.x / cellSize) > 5 || Math.abs(randomY - player.y / cellSize) > 5)) {
-                    enemiesArray.push({ x: randomX * cellSize, y: randomY * cellSize, size: cellSize * 0.6, speed: 3, moving: false, targetX: null, targetY: null, moveTimer: 0 });
+                    // Tamanho do inimigo ajustado para caber perfeitamente na célula
+                    enemiesArray.push({ x: randomX * cellSize, y: randomY * cellSize, size: cellSize, speed: 3, moving: false, targetX: null, targetY: null, moveTimer: 0 });
                     placedEnemies++;
                 }
             }
@@ -563,6 +577,7 @@
                     break;
             }
 
+            // Verifica se a próxima célula é válida (não é uma parede) antes de permitir o movimento
             if (nextGridY >= 0 && nextGridY < maze.length && nextGridX >= 0 && nextGridX < maze[0].length && maze[nextGridY][nextGridX] !== 1) {
                 playerMoving = true;
                 animateMove(player, targetX, targetY, () => {
@@ -590,7 +605,7 @@
                 if (currentStep < steps) {
                     animationFrameId = requestAnimationFrame(animationFrame);
                 } else {
-                    entity.x = targetX;
+                    entity.x = targetX; // Garante que a entidade se encaixe perfeitamente no alvo no final
                     entity.y = targetY;
                     if (callback) callback();
                 }
@@ -609,14 +624,40 @@
             const playerGridX = Math.floor(player.x / cellSize);
             const playerGridY = Math.floor(player.y / cellSize);
 
-            for (let i = enemies.length - 1; i >= 0; i--) {
-                const enemyGridX = Math.floor(enemies[i].x / cellSize);
-                const enemyGridY = Math.floor(enemies[i].y / cellSize);
+            let attackTargetGridX = playerGridX;
+            let attackTargetGridY = playerGridY;
 
-                const distance = Math.abs(playerGridX - enemyGridX) + Math.abs(playerGridY - enemyGridY);
+            // Determine the attack target cell based on player direction
+            switch (playerDirection) {
+                case 'up':
+                    attackTargetGridY--;
+                    break;
+                case 'down':
+                    attackTargetGridY++;
+                    break;
+                case 'left':
+                    attackTargetGridX--;
+                    break;
+                case 'right':
+                    attackTargetGridX++;
+                    break;
+            }
 
-                if (distance <= 1) {
-                    enemies.splice(i, 1);
+            // Check if the attack target cell is within maze bounds
+            if (attackTargetGridY >= 0 && attackTargetGridY < maze.length &&
+                attackTargetGridX >= 0 && attackTargetGridX < maze[0].length) {
+
+                for (let i = enemies.length - 1; i >= 0; i--) {
+                    const enemy = enemies[i];
+                    const enemyGridX = Math.floor(enemy.x / cellSize);
+                    const enemyGridY = Math.floor(enemy.y / cellSize);
+
+                    // If an enemy is in the attack target cell, remove it
+                    if (enemyGridX === attackTargetGridX && enemyGridY === attackTargetGridY) {
+                        enemies.splice(i, 1);
+                        // Assuming one enemy per cell, or only one hit per attack
+                        break;
+                    }
                 }
             }
         }
@@ -869,9 +910,34 @@
             ctx.restore(); // Restore the context state
 
             if (player.isAttacking) {
-                ctx.strokeStyle = 'red';
-                ctx.lineWidth = 5;
-                ctx.strokeRect(player.x - cellSize, player.y - cellSize, player.size + 2 * cellSize, player.size + 2 * cellSize);
+                let attackEffectX = player.x;
+                let attackEffectY = player.y;
+
+                // Adjust the attack effect position based on player direction
+                switch (playerDirection) {
+                    case 'up':
+                        attackEffectY -= cellSize; // Move up one cell
+                        break;
+                    case 'down':
+                        attackEffectY += cellSize; // Move down one cell
+                        break;
+                    case 'left':
+                        attackEffectX -= cellSize; // Move left one cell
+                        break;
+                    case 'right':
+                        attackEffectX += cellSize; // Move right one cell
+                        break;
+                }
+                
+                // Draw the attack effect image
+                if (attackEffectImage.complete && attackEffectImage.naturalHeight !== 0) {
+                    ctx.drawImage(attackEffectImage, attackEffectX, attackEffectY, cellSize, cellSize);
+                } else {
+                    // Fallback to red square if image not loaded
+                    ctx.strokeStyle = 'red';
+                    ctx.lineWidth = 5;
+                    ctx.strokeRect(attackEffectX, attackEffectY, cellSize, cellSize);
+                }
             }
         }
 
