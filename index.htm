@@ -3,6 +3,8 @@
 <head>
     <title>Jogo do Labirinto</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, viewport-fit=cover">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
@@ -78,6 +80,20 @@
             align-items: center;
             justify-content: center;
             box-sizing: border-box;
+            overflow-y: auto; /* Adicionado para permitir scroll vertical */
+        }
+        #startScreen h1 {
+            font-family: 'Creepster', cursive; /* Fonte estilizada */
+            font-size: 10vw; /* Tamanho maior para o título */
+            color: #FFD700; /* Cor dourada */
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.6); /* Sombra para o brilho */
+            margin-bottom: 2vw; /* Espaço entre o título e o mascote */
+        }
+        #startScreen img {
+            max-width: 50vw; /* Ajuste o tamanho máximo do mascote */
+            max-height: 50vh; /* Ajuste o tamanho máximo do mascote */
+            height: auto;
+            margin-bottom: 2vw;
         }
         #startButton {
             padding: 2vw 4vw;
@@ -89,6 +105,7 @@
             border-radius: 5px;
             opacity: 0.5; /* Disabled state */
             cursor: not-allowed;
+            margin-top: 2vw; /* Espaçamento abaixo do mascote/título */
         }
         #startButton.ready {
             opacity: 1;
@@ -258,23 +275,48 @@
             }
         }
 
-        /* Estilos para o botão de configurações */
-        #settingsButton {
-            position: fixed;
-            top: 0.5vmin; /* Mais próximo do canto */
-            left: 0.5vmin; /* Mais próximo do canto */
-            background: none; /* Removido */
-            border: none; /* Removido */
-            padding: 0; /* Removido */
-            font-size: 5vmin; /* Ajustado para ser apenas o ícone */
-            color: white; /* Cor do ícone */
+        /* Estilos para o botão de configurações na tela inicial */
+        #startScreenSettingsButton {
+            position: fixed; /* Posição absoluta para o canto */
+            bottom: 20px; /* Distância do fundo */
+            left: 20px; /* Distância da esquerda */
+            background-color: #6c757d; /* Cor cinza para configurações */
+            color: white;
+            border: none;
+            padding: 1.5vmin; /* Ajustado para ícone */
+            font-size: 4vmin; /* Tamanho do ícone */
             cursor: pointer;
-            z-index: 50; /* Garante que fique acima de outros elementos */
-            display: none; /* Escondido inicialmente, aparece quando o jogo inicia */
+            border-radius: 50%; /* Torna o botão redondo */
+            z-index: 25; /* Acima de outros elementos da tela inicial */
+            display: flex; /* Para centralizar o ícone */
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* Sombra sutil */
         }
-        /* Efeito hover para o ícone, se desejar */
-        #settingsButton:hover {
-            color: #ccc; /* Clareia um pouco no hover */
+        #startScreenSettingsButton:hover {
+            background-color: #5a6268;
+        }
+
+        /* Estilos para o botão "Voltar para o Início" (agora um ícone) */
+        #backToStartButton {
+            position: fixed;
+            top: 5px;
+            left: 5px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 1.5vmin; /* Ajuste o padding para o ícone */
+            font-size: 4vmin; /* Tamanho do ícone */
+            cursor: pointer;
+            border-radius: 50%; /* Torna o botão redondo */
+            z-index: 50;
+            display: none; /* Escondido inicialmente por padrão */
+            align-items: center; /* Para centralizar o ícone */
+            justify-content: center; /* Para centralizar o ícone */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* Sombra sutil */
+        }
+        #backToStartButton:hover {
+            background-color: #5a6268;
         }
 
         /* Estilos para a tela de configurações */
@@ -293,24 +335,24 @@
             justify-content: center;
             z-index: 60; /* Acima de tudo */
             text-align: center;
-            padding: 5vmin; /* Padding ajustado com vmin para responsividade */
+            padding: 5vmin;
             box-sizing: border-box;
             overflow-y: auto; /* Adiciona scroll vertical se o conteúdo for maior que a tela */
         }
         #settingsScreen h2 {
             margin-bottom: 3vmin;
-            font-size: 7vmin; /* Ajustado com vmin */
+            font-size: 7vmin;
         }
         #settingsScreen p {
             margin-bottom: 1.5vmin;
-            font-size: 3.5vmin; /* Texto das informações um pouco menor */
+            font-size: 3.5vmin;
             line-height: 1.5;
-            max-width: 90vw; /* Limita a largura do texto para melhor leitura */
+            max-width: 90vw;
         }
         #closeSettingsButton {
             margin-top: 5vmin;
             padding: 2vmin 4vmin;
-            font-size: 4vmin; /* Ajustado com vmin */
+            font-size: 4vmin;
             cursor: pointer;
             background-color: #007bff;
             color: white;
@@ -331,12 +373,13 @@
 
     <div id="gameContainer">
         <div id="startScreen">
-            <h1>Labirinto</h1>
+            <h1>Labirinto</h1> <img src="https://www.dropbox.com/scl/fi/oj14ct0ei359u2xvjnc3q/Guaxinim-pirata-frente.png?rlkey=05dn1b8k0lf090n1a1pty5vsn&raw=1" alt="Mascote do Jogo" style="width: 15vw; height: auto;">
             <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 2vw;">
-                <img src="https://dl.dropbox.com/scl/fi/qnkpqvyk4p1jbpx6sl2ws/bau.png?rlkey=1ymyfwp7yhhr7w70k7uwk8787&st=2g7f2edw&dl=0" alt="Moeda" style="width: 8vw; height: 8vw; max-width: 60px; max-height: 60px; margin-right: 2vw;">
+                <img src="https://dl.dropbox.com/scl/fi/qnkpqvyk4p1jbpx6sl2ws/bau.png?rlkey=1ymyfwp7yhhr7w70k7uwk8787&st=2g7f2edw&dl=0" alt="Moeda" style="width: 10vw; height: 10vw; max-width: 100px; max-height: 100px; margin-right: 2vw;">
                 <span id="startScreenGoldAmount" style="font-size: 5vw; color: gold;">0</span>
             </div>
             <button id="startButton" disabled>Iniciar Jogo</button>
+            <button id="startScreenSettingsButton"><i class="fas fa-cog"></i></button>
         </div>
         <div id="gameOverScreen" class="end-game-screen">
             <h1>Fim de jogo!</h1>
@@ -368,7 +411,7 @@
         <button id="attack-button" onclick="attack()" style="font-size:80px">&#9876;</button>
     </div>
 
-    <button id="settingsButton">⚙️</button>
+    <button id="backToStartButton"><i class="fas fa-home"></i></button>
 
     <div id="settingsScreen">
         <h2>Controles</h2>
@@ -400,7 +443,8 @@
         const loadingProgress = document.getElementById('loadingProgress');
 
         // Novos elementos para configurações
-        const settingsButton = document.getElementById('settingsButton');
+        const startScreenSettingsButton = document.getElementById('startScreenSettingsButton');
+        const backToStartButton = document.getElementById('backToStartButton');
         const settingsScreen = document.getElementById('settingsScreen');
         const closeSettingsButton = document.getElementById('closeSettingsButton');
 
@@ -412,7 +456,7 @@
         const attackSound = new Audio('https://dl.dropbox.com/scl/fi/pa6u280vcydsvex7mo0e0/hit.mp3?rlkey=u6e9agse4y3q5o3saxbtsxvow&st=a0d2ipds&dl=0');
         attackSound.volume = 0.7;
 
-        const enemyDefeatSound = new Audio('https://dl.dropbox.com/scl/fi/wn6v60w9p37if9hi70i3h/argg.mp3?rlkey=11qyqjk1zpeum4swbwez036sd&st=wo3eeapq&dl=0');
+        const enemyDefeatSound = new Audio('https://dl.dropbox.com/scl/fi/n3x8qo2o2ox9adum9mp3j/samurai-slash-6845.mp3?rlkey=un3cqyj1u6c0r3zkzzv6akhyk&st=1dndaf12&dl=0');
         enemyDefeatSound.volume = 0.7;
 
         const gameOverSound = new Audio('https://dl.dropbox.com/scl/fi/98thpjk9tziuxdnv2s91k/game-over.mp3?rlkey=xqstsgukq45sfwv5sw2aeqrv8&st=f7295r7q&dl=0');
@@ -432,16 +476,15 @@
         let visionRadius;
         let gameSpeed = 75;
         let animationFrameId;
-        let totalGold = 0;
+        let totalGold = 0; // Inicializa totalGold
 
         // Image objects - **VERIFIQUE SUAS URLs AQUI!**
         const playerImageFront = new Image();
-        playerImageFront.src = 'https://dl.dropbox.com/scl/fi/oj14ct0ei359u2xvjnc3q/Guaxinim-pirata-frente.png?rlkey=05dn1b8k0lf090n1a1pty5vsn&st=5a7dzxfj&dl=0';
+        playerImageFront.src = 'https://www.dropbox.com/scl/fi/oj14ct0ei359u2xvjnc3q/Guaxinim-pirata-frente.png?rlkey=05dn1b8k0lf090n1a1pty5vsn&raw=1';
         const playerImageBack = new Image();
-        playerImageBack.src = 'https://dl.dropbox.com/scl/fi/ga6l0pmdyu3bq7k8lrpje/Guaxinim-pirata-costas.png?rlkey=snacwdyl9or37z80dcqz4invt&st=ne2qmtq9&dl=0';
+        playerImageBack.src = 'https://www.dropbox.com/scl/fi/ga6l0pmdyu3bq7k8lrpje/Guaxinim-pirata-costas.png?rlkey=snacwdyl9or37z80dcqz4invt&raw=1';
         const playerImageSide = new Image();
-        // VERIFIQUE ESTA URL: Se houver ;dl=0, substitua por &dl=0
-        playerImageSide.src = 'https://dl.dropbox.com/scl/fi/usfxquqqa8csjozrhlqgm/Guaxinim-pirata-lado-direito.png?rlkey=pzlh8a9xztn98ekxlvza8ohc1&st=c0l68pra&dl=0';
+        playerImageSide.src = 'https://www.dropbox.com/scl/fi/usfxquqqa8csjozrhlqgm/Guaxinim-pirata-lado-direito.png?rlkey=pzlh8a9xztn98ekxlvza8ohc1&raw=1';
         const enemyImage = new Image();
         enemyImage.src = 'https://dl.dropbox.com/scl/fi/ift9fycq40ymfuhqbvsnk/virus.png?rlkey=63mfzrr59mdhxe58828hon4af&st=yhq6w8p7&dl=0';
         const attackEffectImage = new Image();
@@ -452,11 +495,13 @@
         wallTexture.src = 'https://dl.dropbox.com/scl/fi/hhe32wffjev38dypmimhn/Gemini_Generated_Image_l2nvkkl2nvkkl2nv.png?rlkey=ergtplwxo4bfunx1zd2xh9dn4&st=oa6w2icj&dl=0';
         const exitImage = new Image();
         exitImage.src = 'https://dl.dropbox.com/scl/fi/qnkpqvyk4p1jbpx6sl2ws/bau.png?rlkey=1ymyfwp7yhhr7w70k7uwk8787&st=2g7f2edw&dl=0';
+        const mascotImage = new Image(); // Mantém a URL do mascote atualizada
+        mascotImage.src = 'https://www.dropbox.com/scl/fi/oj14ct0ei359u2xvjnc3q/Guaxinim-pirata-frente.png?rlkey=05dn1b8k0lf090n1a1pty5vsn&raw=1';
+
 
         let floorPattern;
         let playerDirection = 'down';
 
-        // Array para armazenar as promessas de carregamento
         const assetPromises = [];
 
         function loadAsset(asset) {
@@ -472,13 +517,13 @@
                         };
                         asset.onerror = () => {
                             console.error(`Falha ao carregar imagem: ${asset.src}`);
-                            assetsLoadedCount++; // Ainda incrementa para não bloquear o carregamento
+                            assetsLoadedCount++;
                             loadingProgress.textContent = `${Math.floor((assetsLoadedCount / assetsToLoadCount) * 100)}%`;
-                            resolve(); // Resolve mesmo com erro para não travar o Promise.all
+                            resolve();
                         };
                     }
                 } else if (asset instanceof HTMLAudioElement) {
-                    if (asset.readyState >= 2) { // HTMLMediaElement.HAVE_CURRENT_DATA
+                    if (asset.readyState >= 2) {
                         resolve();
                     } else {
                         asset.addEventListener('canplaythrough', () => {
@@ -488,50 +533,45 @@
                         }, { once: true });
                         asset.addEventListener('error', () => {
                             console.error(`Falha ao carregar áudio: ${asset.src}`);
-                            assetsLoadedCount++; // Ainda incrementa
+                            assetsLoadedCount++;
                             loadingProgress.textContent = `${Math.floor((assetsLoadedCount / assetsToLoadCount) * 100)}%`;
-                            resolve(); // Resolve mesmo com erro para não travar o Promise.all
+                            resolve();
                         }, { once: true });
-                        asset.load(); // Inicia o carregamento do áudio
+                        asset.load();
                     }
                 } else {
-                    resolve(); // Para outros tipos de assets, resolve imediatamente
+                    resolve();
                 }
             });
         }
 
         const assets = [
             playerImageFront, playerImageBack, playerImageSide, enemyImage,
-            attackEffectImage, floorTexture, wallTexture, exitImage,
+            attackEffectImage, floorTexture, wallTexture, exitImage, mascotImage,
             gameMusic, attackSound, enemyDefeatSound, gameOverSound, gameWonSound, buttonClickSound
         ];
         const assetsToLoadCount = assets.length;
         let assetsLoadedCount = 0;
 
-        // Adiciona todas as promessas ao array
         assets.forEach(asset => {
             assetPromises.push(loadAsset(asset));
         });
 
-        // Espera que todas as promessas sejam resolvidas
         Promise.all(assetPromises)
             .then(() => {
-                // Cria o padrão do chão após a floorTexture ser carregada
                 if (floorTexture.complete && floorTexture.naturalHeight !== 0) {
                     floorPattern = ctx.createPattern(floorTexture, 'repeat');
                 } else {
-                    // Fallback caso a textura do chão falhe por algum motivo inesperado no onload individual
                     console.warn("Floor texture not fully loaded by Promise.all, attempting pattern creation anyway.");
                     try {
                         floorPattern = ctx.createPattern(floorTexture, 'repeat');
                     } catch (e) {
                         console.error("Failed to create floor pattern:", e);
-                        // Pode definir uma cor sólida ou uma textura de fallback
-                        floorPattern = null; // Ou um valor que indique para usar cor de fallback
+                        floorPattern = null;
                     }
                 }
 
-                loadingScreen.style.display = 'none'; // Esconde a tela de carregamento
+                loadingScreen.style.display = 'none';
                 startButton.removeAttribute('disabled');
                 startButton.classList.add('ready');
                 console.log('Todos os assets carregados. O jogo está pronto para iniciar.');
@@ -541,7 +581,8 @@
                 loadingProgress.textContent = 'Erro de carregamento. Verifique o console.';
             });
 
-        // Service Worker Registration
+        // Removido o bloco de registro do Service Worker para evitar o erro de protocolo.
+        /*
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/service-worker.js')
@@ -553,29 +594,30 @@
                     });
             });
         }
+        */
 
         startButton.addEventListener('click', () => {
-            if (startButton.disabled) return; // Prevent click if not ready
-            buttonClickSound.currentTime = 0; // Reinicia o som
+            if (startButton.disabled) return;
+            buttonClickSound.currentTime = 0;
             buttonClickSound.play();
             startScreen.style.display = 'none';
             gameOverScreen.style.display = 'none';
             gameWonScreen.style.display = 'none';
             controls.style.display = 'flex';
-            settingsButton.style.display = 'block'; // Mostra o botão de configurações
+            backToStartButton.style.display = 'block'; // Mostra o botão "Voltar para o Início"
             startGame();
             gameMusic.play();
         });
 
         restartButton.addEventListener('click', () => {
-            buttonClickSound.currentTime = 0; // Reinicia o som
+            buttonClickSound.currentTime = 0;
             buttonClickSound.play();
             gameOverScreen.style.display = 'none';
             startScreen.style.display = 'none';
             gameWonScreen.style.display = 'none';
             controls.style.display = 'flex';
-            settingsButton.style.display = 'block'; // Mostra o botão de configurações
-            totalGold = 0;
+            backToStartButton.style.display = 'block'; // Mostra o botão "Voltar para o Início"
+            totalGold = 0; // Ouro só reseta ao morrer
             startScreenGoldAmountDisplay.textContent = totalGold;
             startGame();
             gameMusic.currentTime = 0;
@@ -583,19 +625,18 @@
         });
 
         playAgainButton.addEventListener('click', () => {
-            buttonClickSound.currentTime = 0; // Reinicia o som
+            buttonClickSound.currentTime = 0;
             buttonClickSound.play();
             gameWonScreen.style.display = 'none';
             startScreen.style.display = 'none';
             gameOverScreen.style.display = 'none';
             controls.style.display = 'flex';
-            settingsButton.style.display = 'block'; // Mostra o botão de configurações
+            backToStartButton.style.display = 'block'; // Mostra o botão "Voltar para o Início"
             startGame();
             gameMusic.currentTime = 0;
             gameMusic.play();
         });
 
-        // Adicionar som aos botões de movimento
         document.getElementById('btn-up').addEventListener('click', () => {
             buttonClickSound.currentTime = 0;
             buttonClickSound.play();
@@ -613,25 +654,36 @@
             buttonClickSound.play();
         });
 
-        // Event Listeners para o botão de configurações
-        settingsButton.addEventListener('click', () => {
+        startScreenSettingsButton.addEventListener('click', () => {
             buttonClickSound.currentTime = 0;
             buttonClickSound.play();
             settingsScreen.style.display = 'flex';
-            cancelAnimationFrame(animationFrameId); // Pausa o loop do jogo
-            gameStarted = false; // Garante que a lógica do jogo esteja parada
-            gameMusic.pause(); // Pausa a música
+        });
+
+        backToStartButton.addEventListener('click', () => {
+            buttonClickSound.currentTime = 0;
+            buttonClickSound.play();
+            gameStarted = false;
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+            gameMusic.pause();
+            controls.style.display = 'none';
+            backToStartButton.style.display = 'none'; // Esconde o botão "Voltar para o Início"
+            startScreen.style.display = 'flex';
+            // totalGold NÃO é resetado aqui, apenas em gameOver()
+            startScreenGoldAmountDisplay.textContent = totalGold; // Atualiza o display com o ouro atual
         });
 
         closeSettingsButton.addEventListener('click', () => {
             buttonClickSound.currentTime = 0;
             buttonClickSound.play();
             settingsScreen.style.display = 'none';
-            gameStarted = true; // Retoma a lógica do jogo
-            gameLoop(); // Reinicia o loop de renderização do jogo
-            gameMusic.play(); // Retoma a música
+            if (gameStarted) {
+                gameLoop();
+                gameMusic.play();
+            }
         });
-
 
         function startGame() {
             if (animationFrameId) {
@@ -840,9 +892,6 @@
             let currentStep = 0;
 
             function animationFrame() {
-                // Remove a condição !gameStarted aqui para que a animação possa completar
-                // quando o jogo está "pausado" pela tela de configurações.
-                // O gameLoop principal já verifica gameStarted.
                 entity.x += stepX;
                 entity.y += stepY;
                 currentStep++;
@@ -860,7 +909,7 @@
         function attack() {
             if (!gameStarted || !player || player.isAttacking) return;
 
-            attackSound.currentTime = 0; // Reinicia o som de ataque
+            attackSound.currentTime = 0;
             attackSound.play();
 
             player.isAttacking = true;
@@ -868,10 +917,8 @@
                 player.isAttacking = false;
             }, 300);
 
-            // Define uma pequena área de ataque em vez de apenas uma célula
-            const attackDetectionRadius = cellSize * 1.2; // Aumente este valor para uma área maior
+            const attackDetectionRadius = cellSize * 1.2;
 
-            // Calcula a posição central do ataque
             let attackCenterX = player.x + player.size / 2;
             let attackCenterY = player.y + player.size / 2;
 
@@ -892,18 +939,16 @@
 
             for (let i = enemies.length - 1; i >= 0; i--) {
                 const enemy = enemies[i];
-                // Calcula a distância entre o centro do ataque e o centro do inimigo
                 const distance = Math.sqrt(
                     Math.pow(attackCenterX - (enemy.x + enemy.size / 2), 2) +
                     Math.pow(attackCenterY - (enemy.y + enemy.size / 2), 2)
                 );
 
-                // Se o inimigo estiver dentro do raio de detecção, ele é atingido
                 if (distance < attackDetectionRadius) {
                     enemies.splice(i, 1);
-                    enemyDefeatSound.currentTime = 0; // Reinicia o som de derrota do inimigo
+                    enemyDefeatSound.currentTime = 0;
                     enemyDefeatSound.play();
-                    break; // Remove apenas um inimigo por ataque
+                    break;
                 }
             }
         }
@@ -912,27 +957,27 @@
             if (!gameStarted) return;
             switch (event.key) {
                 case 'w':
-                    buttonClickSound.currentTime = 0; // Reinicia o som
+                    buttonClickSound.currentTime = 0;
                     buttonClickSound.play();
                     movePlayer('up');
                     break;
                 case 's':
-                    buttonClickSound.currentTime = 0; // Reinicia o som
+                    buttonClickSound.currentTime = 0;
                     buttonClickSound.play();
                     movePlayer('down');
                     break;
                 case 'a':
-                    buttonClickSound.currentTime = 0; // Reinicia o som
+                    buttonClickSound.currentTime = 0;
                     buttonClickSound.play();
                     movePlayer('left');
                     break;
                 case 'd':
-                    buttonClickSound.currentTime = 0; // Reinicia o som
+                    buttonClickSound.currentTime = 0;
                     buttonClickSound.play();
                     movePlayer('right');
                     break;
                 case ' ':
-                case 'Enter': // Adicionado para a tecla Enter
+                case 'Enter':
                     attack();
                     break;
             }
@@ -1115,7 +1160,7 @@
                             ctx.fillStyle = floorPattern;
                             ctx.fillRect(worldX, worldY, cellSize, cellSize);
                         } else {
-                            ctx.fillStyle = 'white'; // Fallback color if pattern fails
+                            ctx.fillStyle = 'white';
                             ctx.fillRect(worldX, worldY, cellSize, cellSize);
                         }
 
@@ -1166,15 +1211,24 @@
                     currentImage = playerImageFront;
             }
 
-            ctx.save();
-            if (scaleX === -1) {
-                ctx.translate(player.x + player.size, player.y);
-                ctx.scale(scaleX, 1);
-                ctx.drawImage(currentImage, 0, 0, player.size, player.size);
+            // Verifica se a imagem foi carregada antes de tentar desenhá-la
+            if (currentImage.complete && currentImage.naturalHeight !== 0) {
+                ctx.save();
+                if (scaleX === -1) {
+                    ctx.translate(player.x + player.size, player.y);
+                    ctx.scale(scaleX, 1);
+                    ctx.drawImage(currentImage, 0, 0, player.size, player.size);
+                } else {
+                    ctx.drawImage(currentImage, player.x, player.y, player.size, player.size);
+                }
+                ctx.restore();
             } else {
-                ctx.drawImage(currentImage, player.x, player.y, player.size, player.size);
+                // Fallback: Desenha um quadrado colorido se a imagem não carregar
+                ctx.fillStyle = 'blue';
+                ctx.fillRect(player.x, player.y, player.size, player.size);
+                console.warn(`Imagem do jogador (${currentImage.src}) não carregada, usando fallback.`);
             }
-            ctx.restore();
+
 
             if (player.isAttacking) {
                 let attackEffectX = player.x;
@@ -1190,7 +1244,7 @@
                     case 'left':
                         attackEffectX -= cellSize;
                         break;
-                        case 'right':
+                    case 'right':
                         attackEffectX += cellSize;
                         break;
                 }
@@ -1215,9 +1269,6 @@
 
         function gameLoop() {
             if (!gameStarted) {
-                // Se o jogo não estiver iniciado (ex: settings screen aberta),
-                // o requestAnimationFrame não deve ser chamado novamente,
-                // apenas quando o jogo for retomado.
                 return;
             }
 
@@ -1248,13 +1299,13 @@
                 cancelAnimationFrame(animationFrameId);
             }
             gameMusic.pause();
-            gameOverSound.currentTime = 0; // Reinicia o som de game over
+            gameOverSound.currentTime = 0;
             gameOverSound.play();
             controls.style.display = 'none';
-            settingsButton.style.display = 'none'; // Esconde o botão de configurações
+            backToStartButton.style.display = 'none'; // Esconde o botão "Voltar para o Início"
             gameOverGoldAmountDisplay.textContent = totalGold;
             gameOverScreen.style.display = 'flex';
-            totalGold = 0;
+            totalGold = 0; // Ouro reseta ao morrer
         }
 
         function gameWon() {
@@ -1263,10 +1314,10 @@
                 cancelAnimationFrame(animationFrameId);
             }
             gameMusic.pause();
-            gameWonSound.currentTime = 0; // Reinicia o som de vitória
+            gameWonSound.currentTime = 0;
             gameWonSound.play();
             controls.style.display = 'none';
-            settingsButton.style.display = 'none'; // Esconde o botão de configurações
+            backToStartButton.style.display = 'none'; // Esconde o botão "Voltar para o Início"
 
             const earnedGold = Math.floor(Math.random() * 10000) + 1;
             totalGold += earnedGold;
