@@ -262,7 +262,7 @@
         const restartButton = document.getElementById('restartButton');
         const gameWonScreen = document.getElementById('gameWonScreen');
         const playAgainButton = document.getElementById('playAgainButton');
-        const gameContainer = document.getElementById('gameContainer'); // Get gameContainer
+        const gameContainer = document.getElementById('gameContainer');
 
         let gameStarted = false;
         let maze;
@@ -275,7 +275,66 @@
         let playerMoveQueue = [];
         let animationFrameId;
 
+        // Player images
+        const playerImageFront = new Image();
+        playerImageFront.src = 'https://dl.dropbox.com/scl/fi/oj14ct0ei359u2xvjnc3q/Guaxinim-pirata-frente.png?rlkey=05dn1b8k0lf090n1a1pty5vsn&st=5a7dzxfi&dl=0'; // Path to the player front image
+        const playerImageBack = new Image();
+        playerImageBack.src = 'https://dl.dropbox.com/scl/fi/ga6l0pmdyu3bq7k8lrpje/Guaxinim-pirata-costas.png?rlkey=snacwdyl9or37z80dcqz4invt&st=ne2qmtq9&dl=0'; // Path to the player back image
+        const playerImageSide = new Image();
+        playerImageSide.src = 'https://dl.dropbox.com/scl/fi/usfxquqqa8csjozrhlqgm/Guaxinim-pirata-lado-direito.png?rlkey=pzlh8a9xztn98ekxlvza8ohc1&st=c0l68pra&dl=0'; // Path to the player side image
+
+        // Enemy image
+        const enemyImage = new Image();
+        enemyImage.src = 'https://dl.dropbox.com/scl/fi/ift9fycq40ymfuhqbvsnk/virus.png?rlkey=63mfzrr59mdhxe58828hon4af&st=yhq6w8p7&dl=0'; // Replace with your enemy image path
+
+        // Floor texture image
+        const floorTexture = new Image();
+        floorTexture.src = 'https://dl.dropbox.com/scl/fi/k1iy1g81iqc6rkevawqm7/Gemini_Generated_Image_yblibxyblibxybli.png?rlkey=2pqns5u6xomuw1v1wotjghmy0&st=2wv28s3m&dl=0';
+        let floorPattern; // To store the created pattern
+
+        // Wall texture image
+        const wallTexture = new Image();
+        // Replace with your actual wall image URL
+        wallTexture.src = 'https://dl.dropbox.com/scl/fi/hhe32wffjev38dypmimhn/Gemini_Generated_Image_l2nvkkl2nvkkl2nv.png?rlkey=ergtplwxo4bfunx1zd2xh9dn4&st=oa6w2icj&dl=0'; 
+
+        // Variable to store the current player direction
+        let playerDirection = 'down'; // 'up', 'down', 'left', 'right'
+
+        // Wait for all images to load before starting the game
+        let imagesLoaded = 0;
+        const totalImages = 5; // player front, back, side, enemy, floor texture, wall texture
+
+        function imageLoadHandler() {
+            imagesLoaded++;
+            if (imagesLoaded === totalImages) {
+                // All images are loaded, now create the patterns
+                // Ensure floorTexture is loaded before creating pattern
+                if (floorTexture.complete && floorTexture.naturalHeight !== 0) {
+                     floorPattern = ctx.createPattern(floorTexture, 'repeat');
+                } else {
+                    floorTexture.onload = () => {
+                        floorPattern = ctx.createPattern(floorTexture, 'repeat');
+                    };
+                }
+                console.log('All images and patterns loaded.');
+            }
+        }
+
+        playerImageFront.onload = imageLoadHandler;
+        playerImageBack.onload = imageLoadHandler;
+        playerImageSide.onload = imageLoadHandler;
+        enemyImage.onload = imageLoadHandler;
+        floorTexture.onload = imageLoadHandler;
+        wallTexture.onload = imageLoadHandler;
+
+
         startButton.addEventListener('click', () => {
+            // Ensure pattern is available before starting, or handle loading state
+            if (!floorPattern) {
+                console.warn('Floor pattern not yet loaded. Please wait.');
+                // Optionally disable button or show loading message
+                return;
+            }
             startScreen.style.display = 'none';
             gameOverScreen.style.display = 'none';
             gameWonScreen.style.display = 'none';
@@ -306,6 +365,7 @@
             gameStarted = true;
             playerMoving = false;
             playerMoveQueue = [];
+            playerDirection = 'down'; // Reset player direction at start
 
             resizeGameElements();
             
@@ -470,10 +530,26 @@
             let nextGridY = currentPlayerGridY;
 
             switch (direction) {
-                case 'up': nextGridY--; targetY -= cellSize; break;
-                case 'down': nextGridY++; targetY += cellSize; break;
-                case 'left': nextGridX--; targetX -= cellSize; break;
-                case 'right': nextGridX++; targetX += cellSize; break;
+                case 'up':
+                    nextGridY--;
+                    targetY -= cellSize;
+                    playerDirection = 'up'; // Update direction
+                    break;
+                case 'down':
+                    nextGridY++;
+                    targetY += cellSize;
+                    playerDirection = 'down'; // Update direction
+                    break;
+                case 'left':
+                    nextGridX--;
+                    targetX -= cellSize;
+                    playerDirection = 'left'; // Update direction
+                    break;
+                case 'right':
+                    nextGridX++;
+                    targetX += cellSize;
+                    playerDirection = 'right'; // Update direction
+                    break;
             }
 
             if (nextGridY >= 0 && nextGridY < maze.length && nextGridX >= 0 && nextGridX < maze[0].length && maze[nextGridY][nextGridX] !== 1) {
@@ -718,17 +794,28 @@
                     const distanceToPlayer = Math.sqrt(Math.pow((player.x + player.size / 2 - worldX - cellSize / 2), 2) + Math.pow((player.y + player.size / 2 - worldY - cellSize / 2), 2));
                     if (distanceToPlayer < visionRadius) {
                         if (maze[y][x] === 1) {
-                            ctx.fillStyle = 'darkgrey';
-                            ctx.fillRect(worldX, worldY, cellSize, cellSize);
+                            // Draw the wall texture instead of a filled rectangle
+                            if (wallTexture.complete && wallTexture.naturalHeight !== 0) {
+                                ctx.drawImage(wallTexture, worldX, worldY, cellSize, cellSize);
+                            } else {
+                                ctx.fillStyle = 'darkgrey'; // Fallback if texture not loaded
+                                ctx.fillRect(worldX, worldY, cellSize, cellSize);
+                            }
                         } else if (maze[y][x] === 2) {
-                            ctx.fillStyle = 'green';
+                            ctx.fillStyle = 'green'; // Exit
                             ctx.fillRect(worldX, worldY, cellSize, cellSize);
                         } else {
-                            ctx.fillStyle = 'white';
-                            ctx.fillRect(worldX, worldY, cellSize, cellSize);
+                            // Apply floor texture
+                            if (floorPattern) {
+                                ctx.fillStyle = floorPattern;
+                                ctx.fillRect(worldX, worldY, cellSize, cellSize);
+                            } else {
+                                ctx.fillStyle = 'white'; // Fallback if texture not loaded
+                                ctx.fillRect(worldX, worldY, cellSize, cellSize);
+                            }
                         }
                     } else {
-                        ctx.fillStyle = 'black';
+                        ctx.fillStyle = 'black'; // Out of vision
                         ctx.fillRect(worldX, worldY, cellSize, cellSize);
                     }
                 }
@@ -737,8 +824,38 @@
 
         function drawPlayer() {
             if (!player) return;
-            ctx.fillStyle = 'blue';
-            ctx.fillRect(player.x, player.y, player.size, player.size);
+
+            let currentImage;
+            let scaleX = 1; // For horizontal flipping
+
+            switch (playerDirection) {
+                case 'up':
+                    currentImage = playerImageBack;
+                    break;
+                case 'down':
+                    currentImage = playerImageFront;
+                    break;
+                case 'left':
+                    currentImage = playerImageSide;
+                    scaleX = -1; // Flip image for left direction
+                    break;
+                case 'right':
+                    currentImage = playerImageSide;
+                    break;
+                default:
+                    currentImage = playerImageFront; // Default to front if no direction is set
+            }
+
+            ctx.save(); // Save the current context state
+            if (scaleX === -1) {
+                // Adjust translation point for flipping around the player's center
+                ctx.translate(player.x + player.size, player.y);
+                ctx.scale(scaleX, 1);
+                ctx.drawImage(currentImage, 0, 0, player.size, player.size);
+            } else {
+                ctx.drawImage(currentImage, player.x, player.y, player.size, player.size);
+            }
+            ctx.restore(); // Restore the context state
 
             if (player.isAttacking) {
                 ctx.strokeStyle = 'red';
@@ -750,8 +867,7 @@
         function drawEnemies() {
             for (const enemy of enemies) {
                 if (isEnemyVisible(enemy)) {
-                    ctx.fillStyle = 'red';
-                    ctx.fillRect(enemy.x, enemy.y, enemy.size, enemy.size);
+                    ctx.drawImage(enemyImage, enemy.x, enemy.y, enemy.size, enemy.size);
                 }
             }
         }
