@@ -552,9 +552,10 @@
         const attackEffectImage = new Image();
         attackEffectImage.src = 'https://dl.dropbox.com/scl/fi/wsfuzim41kzcdda33g9cb/Pngtree-glow-light-effect-orange-sparkling_19277829.png?rlkey=6n6oofd62ot29w4d5pdchkbm4&st=n9kgh9nv&dl=0';
         const floorTexture = new Image();
-        floorTexture.src = 'https://dl.dropbox.com/scl/fi/k1iy1g81iqc6rkevawqm7/Gemini_Generated_Image_yblibxyblibxybli.png?rlkey=2pqns5u6xomuw1v1wotjghmy0&st=3wksrb0i&dl=0';
+        // Alterado para uma imagem que se repete bem para o chão
+        floorTexture.src = 'https://dl.dropbox.com/scl/fi/emejaex4wqqgf27rasakz/ChatGPT-Image-23-de-mai.-de-2025-20_34_53-2.png?rlkey=7pp2te1l0s69hz94dzo740aq9&st=gs8o1bfi&dl=0';
         const wallTexture = new Image();
-        wallTexture.src = 'https://dl.dropbox.com/scl/fi/hhe32wffjev38dypmimhn/Gemini_Generated_Image_l2nvkkl2nvkkl2nv.png?rlkey=ergtplwxo4bfunx1zd2xh9dn4&st=oa6w2icj&dl=0';
+        wallTexture.src = 'https://dl.dropbox.com/scl/fi/hhe32wffjev38dypmimhn/Gemini_Generated_Image_l2nvkkl2nvkkl2nv.png?rlkey=ergtplwxo4bfunx1zd2xh9dn4&st=v8jb1hg8&dl=0';
         const exitImage = new Image();
         exitImage.src = 'https://dl.dropbox.com/scl/fi/qnkpqvyk4p1jbpx6sl2ws/bau.png?rlkey=1ymyfwp7yhhr7w70k7uwk8787&st=2g7f2edw&dl=0';
         const mascotImage = new Image(); // Mantém a URL do mascote atualizada
@@ -621,18 +622,7 @@
         Promise.all(assetPromises)
             .then(() => {
                 // ctx já está definido aqui
-                if (floorTexture.complete && floorTexture.naturalHeight !== 0) {
-                    floorPattern = ctx.createPattern(floorTexture, 'repeat');
-                } else {
-                    console.warn("Floor texture not fully loaded by Promise.all, attempting pattern creation anyway.");
-                    try {
-                        floorPattern = ctx.createPattern(floorTexture, 'repeat');
-                    } catch (e) {
-                        console.error("Failed to create floor pattern:", e);
-                        floorPattern = null;
-                    }
-                }
-
+                // floorPattern = ctx.createPattern(floorTexture, 'repeat'); // Não é mais necessário para desenhar individualmente
                 loadingScreen.style.display = 'none';
                 startButton.removeAttribute('disabled');
                 startButton.classList.add('ready');
@@ -1216,12 +1206,11 @@
                     const distanceToPlayer = Math.sqrt(Math.pow((player.x + player.size / 2 - worldX - cellSize / 2), 2) + Math.pow((player.y + player.size / 2 - worldY - cellSize / 2), 2));
 
                     if (distanceToPlayer < visionRadius) {
-                        // Desenha o chão
-                        if (floorPattern) {
-                            ctx.fillStyle = floorPattern;
-                            ctx.fillRect(worldX, worldY, cellSize, cellSize);
+                        // Desenha o chão com a imagem diretamente em cada quadrado
+                        if (floorTexture.complete && floorTexture.naturalHeight !== 0) {
+                            ctx.drawImage(floorTexture, worldX, worldY, cellSize, cellSize);
                         } else {
-                            ctx.fillStyle = 'white'; // Fallback color if pattern fails
+                            ctx.fillStyle = 'white'; // Cor de fallback se a textura falhar
                             ctx.fillRect(worldX, worldY, cellSize, cellSize);
                         }
 
