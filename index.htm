@@ -6,30 +6,36 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
     <style>
+        /* Estilos globais e reset */
         body {
             margin: 0;
             overflow: hidden;
             background-color: #000;
             display: flex;
             flex-direction: column;
-            height: 70%;
-            width: 100vw;
+            height: 100vh; /* Ocupa 100% da altura da viewport */
+            width: 100vw; /* Ocupa 100% da largura da viewport */
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
             user-select: none;
+            font-family: sans-serif; /* Fonte de fallback */
+            color: white; /* Cor de texto padrão */
         }
 
+        /* Contêiner principal do jogo */
         #gameContainer {
             display: flex;
             flex-direction: column;
-            flex-grow: 1;
+            flex-grow: 1; /* Permite que o gameContainer ocupe o espaço restante */
             position: relative;
             overflow: hidden;
-            padding-bottom: 0; /* This will be dynamically set by JavaScript */
-            box-sizing: border-box; /* Ensures padding is included in the total height */
+            padding-bottom: 0; /* Será definido dinamicamente por JavaScript */
+            box-sizing: border-box; /* Garante que o padding seja incluído na altura total */
+            /* A altura é agora controlada pelo flex-grow do body */
         }
 
+        /* Canvas do jogo */
         #gameCanvas {
             background-color: black;
             width: 100%;
@@ -39,7 +45,7 @@
             position: absolute;
         }
 
-        /* Loading Screen */
+        /* Tela de Carregamento */
         #loadingScreen {
             position: fixed;
             top: 0;
@@ -53,66 +59,85 @@
             align-items: center;
             justify-content: center;
             z-index: 40;
-            font-size: 5vw;
+            font-size: 5vmin; /* Tamanho da fonte responsivo */
             text-align: center;
         }
         #loadingScreen p {
-            margin-top: 2vw;
-            font-size: 3vw;
+            margin-top: 2vmin; /* Margem responsiva */
+            font-size: 3vmin; /* Tamanho da fonte responsivo */
         }
 
-        /* Estilos da tela inicial */
+        /* Estilos da Tela Inicial */
         #startScreen {
             position: fixed;
+            margin: auto;
             top: 0;
+            bottom: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: rgba(0, 0, 0, 1);
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
             color: white;
-            padding: 3vw;
+            padding: 3vmin; /* Padding responsivo */
             border-radius: 5px;
             text-align: center;
             z-index: 20;
-            max-width: none;
-            display: flex;
+            display: flex; /* Usado flex para centralizar o conteúdo */
             flex-direction: column;
             align-items: center;
             justify-content: center;
             box-sizing: border-box;
-            overflow-y: auto; /* Adicionado para permitir scroll vertical */
+            overflow-y: auto;
         }
         #startScreen h1 {
-            font-family: 'Creepster', cursive; /* Fonte estilizada */
-            font-size: 10vw; /* Tamanho maior para o título */
-            color: #FFD700; /* Cor dourada */
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.6); /* Sombra para o brilho */
-            margin-bottom: 2vw; /* Espaço entre o título e o mascote */
+            margin: 0;
+            left: 0;
+            right: 0;
+            font-family: 'Creepster', cursive;
+            font-size: 10vmin; /* Tamanho da fonte responsivo */
+            color: #FFD700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.6);
+            margin-bottom: 5vmin; /* Margem responsiva */
         }
         #startScreen img {
-            max-width: 50vw; /* Ajuste o tamanho máximo do mascote */
-            max-height: 50vh; /* Ajuste o tamanho máximo do mascote */
+            width: 25vmin; /* Largura responsiva para o mascote */
+            max-width: 200px; /* Largura máxima para evitar super-escala em telas grandes */
             height: auto;
-            margin-bottom: 2vw;
+            margin-bottom: 2vmin; /* Margem responsiva */
+        }
+        #startScreen #startScreenGoldAmount {
+            font-size: 5vmin; /* Tamanho da fonte responsivo para a quantidade de ouro */
+        }
+        #startScreen .gold-display img {
+            width: 10vmin; /* Largura responsiva para o ícone de ouro */
+            height: 10vmin;
+            max-width: 60px; /* Largura máxima para o ícone de ouro */
+            max-height: 60px;
+            margin-right: 2vmin;
         }
         #startButton {
-            padding: 2vw 4vw;
-            font-size: 3.5vw;
+            padding: 2vmin 4vmin; /* Padding responsivo */
+            font-size: 3.5vmin; /* Tamanho da fonte responsivo */
             cursor: pointer;
             background-color: #007bff;
             color: white;
             border: none;
             border-radius: 5px;
-            opacity: 0.5; /* Disabled state */
+            opacity: 0.5; /* Estado desabilitado */
             cursor: not-allowed;
-            margin-top: 2vw; /* Espaçamento abaixo do mascote/título */
+            margin-top: 2vmin; /* Margem responsiva */
+            transition: opacity 0.3s;
         }
         #startButton.ready {
             opacity: 1;
             cursor: pointer;
         }
+        #startButton:hover.ready {
+            background-color: #0056b3;
+        }
 
-        /* Estilos das telas de Fim de Jogo (Game Over e Game Won) */
+        /* Estilos das Telas Finais de Jogo (Game Over e Game Won) */
         .end-game-screen {
             position: fixed;
             top: 0;
@@ -128,76 +153,83 @@
             z-index: 30;
             font-weight: bold;
             box-sizing: border-box;
+            padding: 5vmin; /* Padding responsivo */
         }
-
+        .end-game-screen h1 {
+             font-family: 'Creepster', cursive;
+             font-size: 10vmin; /* Tamanho da fonte responsivo */
+             color: #FFD700;
+             text-shadow: 0 0 10px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.6);
+             margin-bottom: 5vmin;
+        }
         .end-game-screen img {
-            max-width: 80%;
-            height: auto;
-            margin-bottom: 2vw;
+            width: 10vmin; /* Largura responsiva para o ícone de ouro */
+            height: 10vmin;
+            max-width: 60px; /* Largura máxima para o ícone de ouro */
+            max-height: 60px;
+            margin-right: 2vmin;
         }
-
+        .end-game-screen span {
+            font-size: 5vmin; /* Tamanho da fonte responsivo para a quantidade de ouro */
+            color: gold;
+        }
         .end-game-screen button {
-            margin-top: 2vw;
-            padding: 2vw 4vw;
-            font-size: 25px;
+            margin-top: 4vmin; /* Margem responsiva */
+            padding: 2vmin 4vmin; /* Padding responsivo */
+            font-size: 3vmin; /* Tamanho da fonte responsivo */
             cursor: pointer;
             background-color: #28a745;
             color: white;
             border: none;
-            border-radius: 50px; /* Borda arredondada */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Sombra */
-            transition: transform 0.2s, background-color 0.2s; /* Transição suave */
+            border-radius: 50px;
+            box-shadow: 0 0.5vmin 1vmin rgba(0, 0, 0, 0.3); /* Sombra responsiva */
+            transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
         }
-
         .end-game-screen button:hover {
-            transform: translateY(-2px); /* Efeito de elevação */
-            background-color: #218838; /* Escurece um pouco no hover */
+            transform: translateY(-0.5vmin);
+            background-color: #218838;
+            box-shadow: 0 0.8vmin 1.5vmin rgba(0, 0, 0, 0.4);
         }
-
         .end-game-screen button:active {
-            transform: translateY(0); /* Retorna à posição original ao clicar */
-            background-color: #1e7e34; /* Mais escuro ao clicar */
+            transform: translateY(0);
+            background-color: #1e7e34;
+            box-shadow: 0 0.5vmin 1vmin rgba(0, 0, 0, 0.3);
         }
 
-        /* Controles - Conteiner principal que engloba todos os botões */
+        /* Controles - Contêiner principal que engloba todos os botões */
         #controls {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height:30%;
+            height: 30vh; /* Altura fixa baseada na altura da viewport para mobile */
             display: flex;
-            justify-content: space-between;
+            justify-content: space-around; /* Distribui os itens uniformemente */
             align-items: center;
-            padding: 1.5vh 2vw;
+            padding: 1.5vmin 2vmin; /* Padding responsivo */
             background-color: #222;
             flex-shrink: 0;
             z-index: 15;
             box-sizing: border-box;
-            padding-bottom: 30px;
         }
 
-        /* Grupo de botões de movimento em cruz */
+        /* Grupo de botões de movimento direcional */
         #directional-controls {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
-            width: 50vmin;
-            height: 50vmin;
-            max-width: 250px;
-            max-height: 250px;
-            aspect-ratio: 1 / 1;
-            margin-left: 1vw;
+            width: 25vmin; /* Largura responsiva para caber na área de controles */
+            height: 25vmin; /* Altura responsiva para caber na área de controles */
+            max-width: 250px; /* Largura máxima para evitar super-escala */
+            max-height: 250px; /* Altura máxima para evitar super-escala */
+            aspect-ratio: 1 / 1; /* Mantém a proporção quadrada */
+            margin-left: 1vmin; /* Margem responsiva */
             flex-shrink: 0;
         }
 
         #directional-controls button {
-            width: 70px;
-            height: 70px;
-            font-size: 45px;
+            width: 100%; /* Preenche a célula da grade */
+            height: 100%; /* Preenche a célula da grade */
+            font-size: 6vmin; /* Tamanho da fonte responsivo */
             background-color: #333;
             color: white;
-            border: 1px solid #555;
+            border: 0.1vmin solid #555; /* Borda responsiva */
             border-radius: 5px;
             cursor: pointer;
             display: flex;
@@ -209,11 +241,12 @@
             -moz-user-select: none;
             -ms-user-select: none;
             user-select: none;
-            -webkit-tap-highlight-color: transparent; /* Adicione aqui */
-            outline: none; /* Adicione aqui */
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+            transition: background-color 0.1s;
         }
 
-        /* Posicionamento dos botões dentro do grid (formato de cruz) */
+        /* Posicionamento dos botões dentro da grade (formato de cruz) */
         #btn-up { grid-area: 1 / 2 / 2 / 3; }
         #btn-left { grid-area: 2 / 1 / 3 / 2; }
         #btn-center { grid-area: 2 / 2 / 3 / 3; opacity: 0; pointer-events: none;}
@@ -224,21 +257,16 @@
             background-color: #555;
         }
 
-        /* Espaço entre os controles direcionais e o botão de ataque */
-        #controls > div:first-child {
-            margin-right: 4vw;
-        }
-
         /* Botão de ataque */
         #attack-button {
-            width: 20vmin;
-            height: 20vmin;
-            max-width: 130px;
-            max-height: 130px;
-            font-size: 4.5vw;
+            width: 18vmin; /* Largura responsiva para caber na área de controles */
+            height: 18vmin; /* Altura responsiva para caber na área de controles */
+            max-width: 150px; /* Largura máxima para evitar super-escala */
+            max-height: 150px; /* Altura máxima para evitar super-escala */
+            font-size: 8vmin; /* Tamanho da fonte responsivo */
             background-color: #dc3545;
             color: white;
-            border: 1px solid #bb2d3b;
+            border: 0.1vmin solid #bb2d3b; /* Borda responsiva */
             border-radius: 50%;
             cursor: pointer;
             display: flex;
@@ -246,111 +274,107 @@
             align-items: center;
             padding: 0;
             box-sizing: border-box;
-            margin-right: 2vw;
+            margin-right: 2vmin; /* Margem responsiva */
             flex-shrink: 0;
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
             user-select: none;
-            -webkit-tap-highlight-color: transparent; /* Adicione aqui */
-            outline: none; /* Adicione aqui */
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+            transition: background-color 0.1s;
         }
 
         #attack-button:active {
             background-color: #bb2d3b;
         }
 
-        /* Media Queries para ajustes finos em diferentes tamanhos de tela */
-       @media (orientation: landscape) {
-            #directional-controls {
-                width: 210px;
-                height: 210px;
-            }
-        }
-
-        @media (min-width: 768px) {
-            #directional-controls {
-                width: 210px;
-                height: 210px;
-            }
-        }
-
-        /* Estilos para o botão de configurações na tela inicial */
+        /* Botão de configurações na tela inicial */
         #startScreenSettingsButton {
-            position: fixed; /* Posição absoluta para o canto */
-            bottom: 20px; /* Distância do fundo */
-            left: 20px; /* Distância da esquerda */
-            background-color: #6c757d; /* Cor cinza para configurações */
-            color: white;
-            border: none;
-            padding: 1.5vmin; /* Ajustado para ícone */
-            font-size: 4vmin; /* Tamanho do ícone */
-            cursor: pointer;
-            border-radius: 50%; /* Torna o botão redondo */
-            z-index: 25; /* Acima de outros elementos da tela inicial */
-            display: flex; /* Para centralizar o ícone */
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* Sombra sutil */
-        }
-        #startScreenSettingsButton:hover {
-            background-color: #5a6268;
-        }
-
-        /* Estilos para o botão "Voltar para o Início" (agora um ícone) */
-        #backToStartButton {
-            position: fixed;
-            top: 5px;
-            left: 5px;
+            position: absolute; /* Posição absoluta para posicionamento consistente */
+            bottom: 2vmin; /* Distância responsiva do fundo */
+            left: 2vmin; /* Distância responsiva da esquerda */
             background-color: #6c757d;
             color: white;
             border: none;
-            padding: 1.5vmin; /* Ajuste o padding para o ícone */
-            font-size: 4vmin; /* Tamanho do ícone */
+            width: 8vmin; /* Largura responsiva para torná-lo redondo */
+            height: 8vmin; /* Altura responsiva para torná-lo redondo */
+            max-width: 50px; /* Largura máxima */
+            max-height: 50px; /* Altura máxima */
+            font-size: 4vmin; /* Tamanho da fonte responsivo */
             cursor: pointer;
-            border-radius: 50%; /* Torna o botão redondo */
+            border-radius: 50%;
+            z-index: 25;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0.2vmin 0.4vmin rgba(0, 0, 0, 0.3); /* Sombra responsiva */
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+        #startScreenSettingsButton:hover {
+            background-color: #5a6268;
+            box-shadow: 0 0.4vmin 0.8vmin rgba(0, 0, 0, 0.4);
+        }
+
+        /* Botão "Voltar para o Início" (agora um ícone redondo) */
+        #backToStartButton {
+            position: fixed; /* Posição fixa */
+            top: 2vmin; /* Distância responsiva do topo */
+            left: 2vmin; /* Distância responsiva da esquerda */
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            width: 8vmin; /* Largura responsiva para torná-lo redondo */
+            height: 8vmin; /* Altura responsiva para torná-lo redondo */
+            max-width: 50px; /* Largura máxima */
+            max-height: 50px; /* Altura máxima */
+            font-size: 4vmin; /* Tamanho da fonte responsivo */
+            cursor: pointer;
+            border-radius: 50%;
             z-index: 50;
-            display: none; /* Escondido inicialmente por padrão */
-            align-items: center; /* Para centralizar o ícone */
-            justify-content: center; /* Para centralizar o ícone */
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* Sombra sutil */
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0.2vmin 0.4vmin rgba(0, 0, 0, 0.3); /* Sombra responsiva */
+            transition: background-color 0.2s, box-shadow 0.2s;
         }
         #backToStartButton:hover {
             background-color: #5a6268;
+            box-shadow: 0 0.4vmin 0.8vmin rgba(0, 0, 0, 0.4);
         }
 
         /* Estilos para a tela de configurações */
         #settingsScreen {
             position: fixed;
+            margin: auto;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
-            max-height: 100vh; /* Garante que a tela não exceda a altura da viewport */
-            background-color: rgba(0, 0, 0, 0.95);
+            right: 0;
+            bottom: 0;
+            background: #000;
             color: white;
-            display: none; /* Escondido por padrão */
+            display: none; /* Definido como 'none' por padrão */
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 60; /* Acima de tudo */
+            z-index: 60;
             text-align: center;
-            padding: 5vmin;
+            padding: 5vmin; /* Padding responsivo */
+            overflow-y: auto;
             box-sizing: border-box;
-            overflow-y: auto; /* Adiciona scroll vertical se o conteúdo for maior que a tela */
         }
         #settingsScreen h2 {
+            font-size: 7vmin; /* Tamanho da fonte responsivo */
             margin-bottom: 3vmin;
-            font-size: 7vmin;
         }
         #settingsScreen p {
             margin-bottom: 1.5vmin;
-            font-size: 3.5vmin;
+            font-size: 3.5vmin; /* Tamanho da fonte responsivo */
             line-height: 1.5;
             max-width: 90vw;
         }
         .volume-control {
-            margin-top: 2vmin;
+            margin-top: 3vmin; /* Margem responsiva */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -358,12 +382,12 @@
             max-width: 400px;
         }
         .volume-control label {
-            font-size: 3vmin;
+            font-size: 3vmin; /* Tamanho da fonte responsivo */
             margin-bottom: 1vmin;
         }
         .volume-control input[type="range"] {
             width: 100%;
-            height: 10px;
+            height: 1.5vmin; /* Altura responsiva */
             -webkit-appearance: none;
             background: #d3d3d3;
             outline: none;
@@ -377,34 +401,134 @@
         .volume-control input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 25px;
-            height: 25px;
+            width: 4vmin; /* Tamanho do "thumb" responsivo */
+            height: 4vmin;
             background: #007bff;
             cursor: pointer;
             border-radius: 50%;
+            margin-top: calc(-1.25vmin); /* Ajusta o "thumb" verticalmente */
         }
         .volume-control input[type="range"]::-moz-range-thumb {
-            width: 25px;
-            height: 25px;
+            width: 4vmin; /* Tamanho do "thumb" responsivo */
+            height: 4vmin;
             background: #007bff;
             cursor: pointer;
             border-radius: 50%;
         }
 
         #closeSettingsButton {
-            margin-top: 5vmin;
-            padding: 2vmin 4vmin;
-            font-size: 4vmin;
+            margin-top: 5vmin; /* Margem responsiva */
+            padding: 2vmin 4vmin; /* Padding responsivo */
+            font-size: 4vmin; /* Tamanho da fonte responsivo */
             cursor: pointer;
             background-color: #007bff;
             color: white;
             border: none;
             border-radius: 5px;
+            transition: background-color 0.2s;
         }
         #closeSettingsButton:hover {
             background-color: #0056b3;
         }
 
+        /* Media Queries para ajustes finos em diferentes tamanhos de tela */
+        /* Para telas em modo paisagem (landscape) */
+       @media (orientation: landscape) {
+            #directional-controls {
+                width: 210px; /* Tamanho fixo em paisagem para evitar que fiquem muito grandes */
+                height: 210px;
+            }
+            #attack-button {
+                width: 130px; /* Tamanho fixo em paisagem */
+                height: 130px;
+            }
+        }
+
+        /* Ajustes para telas maiores (tablets e desktops) */
+        @media (min-width: 768px) {
+            #controls {
+                height: 150px; /* Altura fixa para controles em desktop */
+                padding: 10px 20px;
+            }
+            #directional-controls {
+                width: 100px; /* Ajustado para caber na área de controles e permitir mapa maior */
+                height: 100px; /* Ajustado para caber na área de controles e permitir mapa maior */
+            }
+            #directional-controls button {
+                font-size: 30px; /* Ajuste de fonte */
+            }
+            #attack-button {
+                width: 70px; /* Ajustado para caber na área de controles e permitir mapa maior */
+                height: 70px; /* Ajustado para caber na área de controles e permitir mapa maior */
+                font-size: 45px; /* Ajuste de fonte */
+            }
+            #startScreen h1 {
+                font-size: 80px; /* Tamanho fixo maior para desktop */
+            }
+            #startScreen img {
+                width: 180px; /* Tamanho fixo maior para desktop */
+            }
+            #startScreen .gold-display img {
+                width: 60px;
+                height: 60px;
+            }
+            #startScreen #startScreenGoldAmount {
+                font-size: 50px;
+            }
+            #startButton {
+                font-size: 30px;
+                padding: 15px 30px;
+            }
+            .end-game-screen h1 {
+                font-size: 80px;
+            }
+            .end-game-screen img {
+                width: 60px;
+                height: 60px;
+            }
+            .end-game-screen span {
+                font-size: 50px;
+            }
+            .end-game-screen button {
+                font-size: 25px;
+                padding: 15px 30px;
+            }
+            #startScreenSettingsButton, #backToStartButton {
+                width: 50px; /* Tamanho fixo para desktop */
+                height: 50px; /* Tamanho fixo para desktop */
+                font-size: 30px;
+                bottom: 20px;
+                left: 20px;
+            }
+            #backToStartButton {
+                top: 20px;
+            }
+            #settingsScreen h2 {
+                font-size: 60px;
+            }
+            #settingsScreen p {
+                font-size: 20px;
+            }
+            .volume-control label {
+                font-size: 20px;
+            }
+            .volume-control input[type="range"] {
+                height: 10px;
+            }
+            .volume-control input[type="range"]::-webkit-slider-thumb {
+                width: 25px;
+                height: 25px;
+                margin-top: -7.5px;
+            }
+            .volume-control input[type="range"]::-moz-range-thumb {
+                width: 25px;
+                height: 25px;
+            }
+            #closeSettingsButton {
+                padding: 15px 30px;
+                font-size: 25px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -415,26 +539,27 @@
 
     <div id="gameContainer">
         <div id="startScreen">
-            <h1>Labirinto</h1> <img src="https://www.dropbox.com/scl/fi/oj14ct0ei359u2xvjnc3q/Guaxinim-pirata-frente.png?rlkey=05dn1b8k0lf090n1a1pty5vsn&raw=1" alt="Mascote do Jogo" style="width: 15vw; height: auto;">
-            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 2vw;">
-                <img src="https://dl.dropbox.com/scl/fi/qnkpqvyk4p1jbpx6sl2ws/bau.png?rlkey=1ymyfwp7yhhr7w70k7uwk8787&st=2g7f2edw&dl=0" alt="Moeda" style="width: 10vw; height: 10vw; max-width: 100px; max-height: 100px; margin-right: 2vw;">
-                <span id="startScreenGoldAmount" style="font-size: 5vw; color: gold;">0</span>
+            <h1>Labirinto</h1>
+            <img src="https://www.dropbox.com/scl/fi/oj14ct0ei359u2xvjnc3q/Guaxinim-pirata-frente.png?rlkey=05dn1b8k0lf090n1a1pty5vsn&raw=1" alt="Mascote do Jogo">
+            <div class="gold-display" style="display: flex; align-items: center; justify-content: center; margin-bottom: 2vmin;">
+                <img src="https://dl.dropbox.com/scl/fi/qnkpqvyk4p1jbpx6sl2ws/bau.png?rlkey=1ymyfwp7yhhr7w70k7uwk8787&st=2g7f2edw&dl=0" alt="Moeda">
+                <span id="startScreenGoldAmount">0</span>
             </div>
             <button id="startButton" disabled>Iniciar Jogo</button>
             <button id="startScreenSettingsButton"><i class="fas fa-cog"></i></button>
         </div>
         <div id="gameOverScreen" class="end-game-screen">
             <h1>Fim de jogo!</h1>
-            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 2vw;">
-                <img src="https://dl.dropbox.com/scl/fi/qnkpqvyk4p1jbpx6sl2ws/bau.png?rlkey=1ymyfwp7yhhr7w70k7uwk8787&st=2g7f2edw&dl=0" alt="Moeda" style="width: 8vw; height: 8vw; max-width: 60px; max-height: 60px; margin-right: 2vw;">
-                <span id="gameOverGoldAmount" style="font-size: 5vw; color: gold;">0</span>
+            <div class="gold-display" style="display: flex; align-items: center; justify-content: center; margin-bottom: 2vmin;">
+                <img src="https://dl.dropbox.com/scl/fi/qnkpqvyk4p1jbpx6sl2ws/bau.png?rlkey=1ymyfwp7yhhr7w70k7uwk8787&st=2g7f2edw&dl=0" alt="Moeda">
+                <span id="gameOverGoldAmount">0</span>
             </div>
             <button id="restartButton">Tentar Novamente</button>
         </div>
         <div id="gameWonScreen" class="end-game-screen">
-            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 2vw;">
-                <img src="https://dl.dropbox.com/scl/fi/qnkpqvyk4p1jbpx6sl2ws/bau.png?rlkey=1ymyfwp7yhhr7w70k7uwk8787&st=2g7f2edw&dl=0" alt="Moeda" style="width: 8vw; height: 8vw; max-width: 60px; max-height: 60px; margin-right: 2vw;">
-                <span id="gameWonGoldAmount" style="font-size: 5vw; color: gold;">0</span>
+            <div class="gold-display" style="display: flex; align-items: center; justify-content: center; margin-bottom: 2vmin;">
+                <img src="https://dl.dropbox.com/scl/fi/qnkpqvyk4p1jbpx6sl2ws/bau.png?rlkey=1ymyfwp7yhhr7w70k7uwk8787&st=2g7f2edw&dl=0" alt="Moeda">
+                <span id="gameWonGoldAmount">0</span>
             </div>
             <button id="playAgainButton">Próxima fase</button>
         </div>
@@ -450,7 +575,7 @@
             <button id="btn-down" onclick="movePlayer('down')">&#9660;</button>
         </div>
 
-        <button id="attack-button" onclick="attack()" style="font-size:80px">&#9876;</button>
+        <button id="attack-button" onclick="attack()">&#9876;</button>
     </div>
 
     <button id="backToStartButton"><i class="fas fa-home"></i></button>
@@ -464,7 +589,7 @@
         <p>Teclas D / &#9654; (Direita): Move para direita</p>
         <p><b>Ataque:</b></p>
         <p>Teclas Espaço / Enter / &#9876; (Botão de Ataque): Ataca inimigos</p>
-
+		<center>
         <div class="volume-control">
             <label for="musicVolume">Volume da Música:</label>
             <input type="range" id="musicVolume" min="0" max="1" step="0.01" value="0.5">
@@ -473,7 +598,7 @@
             <label for="sfxVolume">Volume dos Efeitos Sonoros:</label>
             <input type="range" id="sfxVolume" min="0" max="1" step="0.01" value="0.7">
         </div>
-
+		</center>
         <button id="closeSettingsButton">Fechar</button>
     </div>
 
@@ -517,13 +642,13 @@
         const musicVolumeSlider = document.getElementById('musicVolume');
         const sfxVolumeSlider = document.getElementById('sfxVolume');
 
-        // Sons do jogo
+        // Sounds
         const gameMusic = new Audio('https://dl.dropbox.com/scl/fi/ln6s85xx16tx6tlk94f3p/crawling-danger-303228.mp3?rlkey=jq78ikfiy3zanle8p9sl1qct9&st=hq0zg4i2&dl=0');
         gameMusic.loop = true;
-        gameMusic.volume = 0.5; // Volume inicial da música
+        gameMusic.volume = 0.5;
 
         const attackSound = new Audio('https://dl.dropbox.com/scl/fi/pa6u280vcydsvex7mo0e0/hit.mp3?rlkey=u6e9agse4y3q5o3saxbtsxvow&st=a0d2ipds&dl=0');
-        attackSound.volume = 0.7; // Volume inicial dos efeitos sonoros
+        attackSound.volume = 0.7;
 
         const enemyDefeatSound = new Audio('https://dl.dropbox.com/scl/fi/n3x8qo2o2ox9adum9mp3j/samurai-slash-6845.mp3?rlkey=un3cqyj1u6c0r3zkzzv6akhyk&st=1dnd12&dl=0');
         enemyDefeatSound.volume = 0.7;
@@ -537,10 +662,9 @@
         const buttonClickSound = new Audio('https://dl.dropbox.com/scl/fi/cytn4gjiinxr3bsfuul0l/passos.mp3?rlkey=p51wwaavfcfs2p39y0qc4zvvp&st=65aoppn8&dl=0');
         buttonClickSound.volume = 0.5;
 
-        // Array de todos os sons que serão controlados pelo slider de SFX
         const sfxSounds = [attackSound, enemyDefeatSound, gameOverSound, gameWonSound, buttonClickSound];
 
-        // Image objects - **VERIFIQUE SUAS URLs AQUI!**
+        // Image objects
         const playerImageFront = new Image();
         playerImageFront.src = 'https://www.dropbox.com/scl/fi/oj14ct0ei359u2xvjnc3q/Guaxinim-pirata-frente.png?rlkey=05dn1b8k0lf090n1a1pty5vsn&raw=1';
         const playerImageBack = new Image();
@@ -552,13 +676,12 @@
         const attackEffectImage = new Image();
         attackEffectImage.src = 'https://dl.dropbox.com/scl/fi/wsfuzim41kzcdda33g9cb/Pngtree-glow-light-effect-orange-sparkling_19277829.png?rlkey=6n6oofd62ot29w4d5pdchkbm4&st=n9kgh9nv&dl=0';
         const floorTexture = new Image();
-        // Alterado para uma imagem que se repete bem para o chão
         floorTexture.src = 'https://dl.dropbox.com/scl/fi/8d4v35m1pej6i2p9zd4i0/Gemini_Generated_Image_fvq9dnfvq9dnfvq9.png?rlkey=s31ci4if1mq9reh2qiyuxuojt&st=3fx8oy2o&dl=0';
         const wallTexture = new Image();
         wallTexture.src = 'https://dl.dropbox.com/scl/fi/hhe32wffjev38dypmimhn/Gemini_Generated_Image_l2nvkkl2nvkkl2nv.png?rlkey=ergtplwxo4bfunx1zd2xh9dn4&st=v8jb1hg8&dl=0';
         const exitImage = new Image();
         exitImage.src = 'https://dl.dropbox.com/scl/fi/qnkpqvyk4p1jbpx6sl2ws/bau.png?rlkey=1ymyfwp7yhhr7w70k7uwk8787&st=2g7f2edw&dl=0';
-        const mascotImage = new Image(); // Mantém a URL do mascote atualizada
+        const mascotImage = new Image();
         mascotImage.src = 'https://www.dropbox.com/scl/fi/oj14ct0ei359u2xvjnc3q/Guaxinim-pirata-frente.png?rlkey=05dn1b8k0lf090n1a1pty5vsn&raw=1';
 
         let floorPattern;
@@ -621,8 +744,6 @@
 
         Promise.all(assetPromises)
             .then(() => {
-                // ctx já está definido aqui
-                // floorPattern = ctx.createPattern(floorTexture, 'repeat'); // Não é mais necessário para desenhar individualmente
                 loadingScreen.style.display = 'none';
                 startButton.removeAttribute('disabled');
                 startButton.classList.add('ready');
@@ -641,7 +762,7 @@
             gameOverScreen.style.display = 'none';
             gameWonScreen.style.display = 'none';
             controls.style.display = 'flex';
-            backToStartButton.style.display = 'block'; // Mostra o botão "Voltar para o Início"
+            backToStartButton.style.display = 'block';
             startGame();
             gameMusic.play();
         });
@@ -653,8 +774,8 @@
             startScreen.style.display = 'none';
             gameWonScreen.style.display = 'none';
             controls.style.display = 'flex';
-            backToStartButton.style.display = 'block'; // Mostra o botão "Voltar para o Início"
-            totalGold = 0; // Ouro só reseta ao morrer
+            backToStartButton.style.display = 'block';
+            totalGold = 0;
             startScreenGoldAmountDisplay.textContent = totalGold;
             startGame();
             gameMusic.currentTime = 0;
@@ -668,7 +789,7 @@
             startScreen.style.display = 'none';
             gameOverScreen.style.display = 'none';
             controls.style.display = 'flex';
-            backToStartButton.style.display = 'block'; // Mostra o botão "Voltar para o Início"
+            backToStartButton.style.display = 'block';
             startGame();
             gameMusic.currentTime = 0;
             gameMusic.play();
@@ -694,10 +815,15 @@
         startScreenSettingsButton.addEventListener('click', () => {
             buttonClickSound.currentTime = 0;
             buttonClickSound.play();
-            settingsScreen.style.display = 'flex';
-            // Atualiza os sliders com os volumes atuais
+            settingsScreen.style.display = 'flex'; // Use flex para centralizar o conteúdo
             musicVolumeSlider.value = gameMusic.volume;
-            sfxVolumeSlider.value = sfxSounds[0].volume; // Assume que todos os SFX têm o mesmo volume
+            sfxVolumeSlider.value = sfxSounds[0].volume;
+            if (gameStarted) {
+                gameMusic.pause();
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                }
+            }
         });
 
         backToStartButton.addEventListener('click', () => {
@@ -709,10 +835,9 @@
             }
             gameMusic.pause();
             controls.style.display = 'none';
-            backToStartButton.style.display = 'none'; // Esconde o botão "Voltar para o Início"
+            backToStartButton.style.display = 'none';
             startScreen.style.display = 'flex';
-            // totalGold NÃO é resetado aqui, apenas em gameOver()
-            startScreenGoldAmountDisplay.textContent = totalGold; // Atualiza o display com o ouro atual
+            startScreenGoldAmountDisplay.textContent = totalGold;
         });
 
         closeSettingsButton.addEventListener('click', () => {
@@ -725,7 +850,6 @@
             }
         });
 
-        // Event listeners para os sliders de volume
         musicVolumeSlider.addEventListener('input', (event) => {
             gameMusic.volume = parseFloat(event.target.value);
         });
@@ -764,28 +888,48 @@
         }
 
         function resizeGameElements() {
-            const controlsHeight = controls.offsetHeight;
-            gameContainer.style.height = `calc(100vh - ${controlsHeight}px)`;
-
             canvas.width = gameContainer.clientWidth;
             canvas.height = gameContainer.clientHeight;
+
+            // Determine base cell size
+            let baseCellSize;
+            if (window.innerWidth >= 768) { // Desktop resolution
+                // Para desktop, priorize a largura para tornar o mapa maior em telas largas
+                baseCellSize = Math.floor(canvas.width / 30); // Ajuste o divisor conforme necessário para mapa maior
+            } else { // Mobile/smaller screens
+                baseCellSize = Math.floor(Math.min(canvas.width, canvas.height) / 10);
+            }
+
+            // Garanta que o cellSize seja pelo menos um valor mínimo para evitar células minúsculas
+            cellSize = Math.max(baseCellSize, 20); // Tamanho mínimo da célula de 20px, por exemplo
+
+            visionRadius = cellSize * 5;
+
+            // Atualize os tamanhos e posições do jogador e inimigos com base no novo cellSize
+            if (player) { // Verifique se o objeto player existe antes de atualizar
+                player.size = cellSize;
+                player.attackRange = cellSize * 1.5;
+                // Re-alinhe o jogador à grade com base no novo cellSize
+                player.x = Math.floor(player.x / cellSize) * cellSize;
+                player.y = Math.floor(player.y / cellSize) * cellSize;
+            }
+
+            enemies.forEach(enemy => {
+                enemy.size = cellSize;
+                // Re-alinhe os inimigos à grade com base no novo cellSize
+                enemy.x = Math.floor(enemy.x / cellSize) * cellSize;
+                enemy.y = Math.floor(enemy.y / cellSize) * cellSize;
+            });
+
+            // Se o labirinto existir, regenere-o com as novas dimensões com base no novo cellSize
+            if (maze) {
+                maze = generateMaze(Math.floor(canvas.width / cellSize), Math.floor(canvas.height / cellSize));
+            }
         }
 
         window.addEventListener('resize', () => {
             if (gameStarted) {
                 resizeGameElements();
-                cellSize = Math.floor(Math.min(canvas.width, canvas.height) / 10);
-                visionRadius = cellSize * 5;
-                player.size = cellSize;
-                player.attackRange = cellSize * 1.5;
-                player.x = Math.floor(player.x / cellSize) * cellSize;
-                player.y = Math.floor(player.y / cellSize) * cellSize;
-
-                enemies.forEach(enemy => {
-                    enemy.size = cellSize;
-                    enemy.x = Math.floor(enemy.x / cellSize) * cellSize;
-                    enemy.y = Math.floor(enemy.y / cellSize) * cellSize;
-                });
             } else {
                 resizeGameElements();
             }
@@ -1206,16 +1350,14 @@
                     const distanceToPlayer = Math.sqrt(Math.pow((player.x + player.size / 2 - worldX - cellSize / 2), 2) + Math.pow((player.y + player.size / 2 - worldY - cellSize / 2), 2));
 
                     if (distanceToPlayer < visionRadius) {
-                        // Desenha o chão com a imagem diretamente em cada quadrado
                         if (floorTexture.complete && floorTexture.naturalHeight !== 0) {
                             ctx.drawImage(floorTexture, worldX, worldY, cellSize, cellSize);
                         } else {
-                            ctx.fillStyle = 'white'; // Cor de fallback se a textura falhar
+                            ctx.fillStyle = 'white';
                             ctx.fillRect(worldX, worldY, cellSize, cellSize);
                         }
 
                         if (maze[y][x] === 1) {
-                            // Desenha os muros sem sombra
                             if (wallTexture.complete && wallTexture.naturalHeight !== 0) {
                                 ctx.drawImage(wallTexture, worldX, worldY, cellSize, cellSize);
                             } else {
@@ -1223,7 +1365,6 @@
                                 ctx.fillRect(worldX, worldY, cellSize, cellSize);
                             }
                         } else if (maze[y][x] === 2) {
-                            // Desenha a saída (baú)
                             if (exitImage.complete && exitImage.naturalHeight !== 0) {
                                 ctx.drawImage(exitImage, worldX, worldY, cellSize, cellSize);
                             } else {
@@ -1263,7 +1404,6 @@
                     currentImage = playerImageFront;
             }
 
-            // Verifica se a imagem foi carregada antes de tentar desenhá-la
             if (currentImage.complete && currentImage.naturalHeight !== 0) {
                 ctx.save();
                 if (scaleX === -1) {
@@ -1275,12 +1415,10 @@
                 }
                 ctx.restore();
             } else {
-                // Fallback: Desenha um quadrado colorido se a imagem não carregar
                 ctx.fillStyle = 'blue';
                 ctx.fillRect(player.x, player.y, player.size, player.size);
                 console.warn(`Imagem do jogador (${currentImage.src}) não carregada, usando fallback.`);
             }
-
 
             if (player.isAttacking) {
                 let attackEffectX = player.x;
@@ -1354,10 +1492,10 @@
             gameOverSound.currentTime = 0;
             gameOverSound.play();
             controls.style.display = 'none';
-            backToStartButton.style.display = 'none'; // Esconde o botão "Voltar para o Início"
+            backToStartButton.style.display = 'none';
             gameOverGoldAmountDisplay.textContent = totalGold;
             gameOverScreen.style.display = 'flex';
-            totalGold = 0; // Ouro reseta ao morrer
+            totalGold = 0;
         }
 
         function gameWon() {
@@ -1367,9 +1505,9 @@
             }
             gameMusic.pause();
             gameWonSound.currentTime = 0;
-            gameWonSound.play();
+                gameWonSound.play();
             controls.style.display = 'none';
-            backToStartButton.style.display = 'none'; // Esconde o botão "Voltar para o Início"
+            backToStartButton.style.display = 'none';
 
             const earnedGold = Math.floor(Math.random() * 10000) + 1;
             totalGold += earnedGold;
